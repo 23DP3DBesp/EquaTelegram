@@ -12,8 +12,8 @@ const db = require('./db');
 const config = require('./config');
 const logger = require('./logger');
 
-// ВАЖНО: сюда нужно вставить актуальную ссылку из ngrok (или домен после деплоя)
-const MINIAPP_URL = 'https://cupped-hesitate-geologic.ngrok-free.dev';
+// ВАЖНО: задайте URL Mini App в .env через MINIAPP_URL
+const MINIAPP_URL = process.env.MINIAPP_URL || 'https://cupped-hesitate-geologic.ngrok-free.dev';
 
 const execFileAsync = promisify(execFile);
 const bot = new Telegraf(process.env.BOT_TOKEN);
