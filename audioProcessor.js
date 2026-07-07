@@ -24,6 +24,25 @@ function buildEqFilter(bands) {
   return `firequalizer=gain_entry='${entries.join(';')}'`;
 }
 
+function dbToLinearGain(dbValue) {
+  return Math.pow(10, dbValue / 20);
+}
+
+function applyPreGain(inputPath, outputPath, preGainDb) {
+  return new Promise((resolve, reject) => {
+    const gain = Number(preGainDb || 0);
+    if (Math.abs(gain) < 0.01) {
+      fs.copyFileSync(inputPath, outputPath);
+      return resolve();
+    }
+    ffmpeg(inputPath)
+      .audioFilters([`volume=${dbToLinearGain(gain)}`])
+      .on('end', resolve)
+      .on('error', reject)
+      .save(outputPath);
+  });
+}
+
 function applyEq(inputPath, outputPath, bands) {
   return new Promise((resolve, reject) => {
     const hasEq = bands && bands.some((g) => Math.abs(g) > 0.01);
@@ -146,13 +165,15 @@ function applyLoudnormAndLimiter(inputPath, outputPath, stats, targetLufs, trueP
  */
 async function processTrack(inputPath, outputPath, config) {
   const base = outputPath.replace(/\.mp3$/, '');
+  const tempGain = `${base}__0gain.mp3`;
   const tempEq = `${base}__1eq.mp3`;
   const tempComp = `${base}__2comp.mp3`;
   const tempFx = `${base}__3fx.mp3`;
-  const temps = [tempEq, tempComp, tempFx];
+  const temps = [tempGain, tempEq, tempComp, tempFx];
 
   try {
-    await applyEq(inputPath, tempEq, config.bands || []);
+    await applyPreGain(inputPath, tempGain, config.preGainDb);
+    await applyEq(tempGain, tempEq, config.bands || []);
 
     if (config.compressor) {
       await applyMultibandCompressor(tempEq, tempComp);

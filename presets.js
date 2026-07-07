@@ -45,12 +45,30 @@ const PRESETS = {
     stereoWidth: 1.2, // мягкое расширение стерео, комфортно в наушниках
   },
   car: {
-    name: '🚗 Для колонок машины',
+    name: '🚗 Машина: бас + слышимость',
+    category: 'car',
+    targetLufs: -6,
+    truePeak: -0.2,
+    bands: [8, 8, 5, 2, 0, -0.5, 0.8, 1.2, 1, 0],
+    compressor: true,
+    deEsser: true,
+    stereoWidth: 1.03,
+    preGainDb: 1.2,
+    trimSilence: true,
+    fadeInSec: 0.2,
+    fadeOutSec: 0.2,
+  },
+  car_clear: {
+    name: '🚗 Машина: чисто и громко',
     category: 'car',
     targetLufs: -7,
-    truePeak: -0.3,
-    bands: [9, 9, 6, 4, 0, -1, 0, 1, 1, 0], // больше баса и агрессии, компенсация шума салона
+    truePeak: -0.25,
+    bands: [6, 6, 4, 1.5, 0.5, 0.2, 1.2, 1.4, 1.2, 0.5],
     compressor: true,
+    deEsser: true,
+    stereoWidth: 1.02,
+    preGainDb: 1.1,
+    trimSilence: true,
   },
 
   // ---- Нормализация под разные площадки (сравнение громкости) ----
@@ -86,6 +104,7 @@ const DEFAULT_OPTIONS = {
   fadeInSec: 0,
   fadeOutSec: 0,
   trimSilence: false,
+  preGainDb: 0,
 };
 
 function getPresetOptions(preset) {
@@ -94,6 +113,10 @@ function getPresetOptions(preset) {
     compressor: !!preset.compressor,
     deEsser: !!preset.deEsser,
     stereoWidth: preset.stereoWidth || 1.0,
+    fadeInSec: preset.fadeInSec || 0,
+    fadeOutSec: preset.fadeOutSec || 0,
+    trimSilence: !!preset.trimSilence,
+    preGainDb: preset.preGainDb || 0,
   };
 }
 

@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const ffmpeg = require('fluent-ffmpeg');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
 const { processTrack, legacyPresetToBands } = require('./audioProcessor');
 const presets = require('./presets');
 const db = require('./db');
@@ -13,6 +15,7 @@ const logger = require('./logger');
 // ВАЖНО: сюда нужно вставить актуальную ссылку из ngrok (или домен после деплоя)
 const MINIAPP_URL = 'https://cupped-hesitate-geologic.ngrok-free.dev';
 
+const execFileAsync = promisify(execFile);
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 const ORIGINAL_DIR = path.join(__dirname, 'tracks', 'original');
@@ -50,6 +53,68 @@ function getDuration(filePath) {
   });
 }
 
+function getPythonCommand() {
+  const candidates = [
+    process.env.PYTHON,
+    process.env.PYTHON_PATH,
+    'C:/Python314/python.exe',
+    'C:\\Python314\\python.exe',
+    'python',
+    'python3',
+    'py',
+  ].filter(Boolean);
+
+  return candidates[0];
+}
+
+function downloadFromUrl(url, savePath) {
+  const pythonCommand = getPythonCommand();
+  const args = ['-m', 'yt_dlp', '-f', 'bestaudio/best', '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0', '--output', savePath, '--no-playlist', '--restrict-filenames', '--no-warnings', url];
+
+  if (pythonCommand === 'py') {
+    return execFileAsync(pythonCommand, ['-3', ...args], { maxBuffer: 1024 * 1024 * 100 });
+  }
+
+  return execFileAsync(pythonCommand, args, { maxBuffer: 1024 * 1024 * 100 });
+}
+
+async function saveImportedTrack(ctx, sourceUrl, originalNameHint) {
+  const tracksCount = db.getAllTracks().length;
+  if (tracksCount >= config.MAX_TRACKS) {
+    return ctx.reply(`Библиотека заполнена (лимит ${config.MAX_TRACKS} треков). Удали что-нибудь в Mini App, прежде чем добавлять ещё.`);
+  }
+
+  await ctx.reply('Скачиваю трек по ссылке...');
+
+  const safeName = `${Date.now()}_${(originalNameHint || 'track').replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+  const outputTemplate = path.join(ORIGINAL_DIR, `${safeName}.%(ext)s`);
+  await downloadFromUrl(sourceUrl, outputTemplate);
+
+  const files = fs.readdirSync(ORIGINAL_DIR).filter((f) => f.startsWith(`${safeName}.`));
+  const downloadedFile = files.find((f) => f.endsWith('.mp3')) || files[0];
+  if (!downloadedFile) {
+    throw new Error('Не удалось получить скачанный файл');
+  }
+
+  const fullPath = path.join(ORIGINAL_DIR, downloadedFile);
+  const duration = await getDuration(fullPath);
+  const stat = fs.statSync(fullPath);
+  const displayName = path.basename(downloadedFile, path.extname(downloadedFile)).replace(/[_-]+/g, ' ').trim();
+  const trackId = db.addTrack(downloadedFile, displayName || 'Импортированный трек', { duration, sizeBytes: stat.size });
+  logger.info('Трек импортирован по ссылке', { trackId, sourceUrl });
+
+  pendingTracks[ctx.chat.id] = { savePath: fullPath, baseName: downloadedFile };
+
+  const buttons = Object.entries(presets)
+    .filter(([key]) => key !== 'BANDS' && key !== 'getPresetOptions')
+    .map(([key, preset]) => Markup.button.callback(preset.name, `preset:${key}`));
+
+  await ctx.reply(
+    `Трек добавлен в библиотеку! Открой Mini App, чтобы настроить его, или выбери быстрый пресет ниже:`,
+    Markup.inlineKeyboard(buttons, { columns: 1 })
+  );
+}
+
 const pendingTracks = {};
 
 bot.on('audio', async (ctx) => {
@@ -62,6 +127,20 @@ bot.on('document', async (ctx) => {
     await handleIncomingFile(ctx, doc);
   } else {
     ctx.reply('Это не похоже на аудиофайл 🤔');
+  }
+});
+
+bot.on('text', async (ctx) => {
+  const text = ctx.message.text || '';
+  const match = text.match(/https?:\/\/\S+/i);
+  if (!match) return;
+  if (ctx.message.entities?.some((e) => e.type === 'url') || text.includes('http')) {
+    try {
+      await saveImportedTrack(ctx, match[0], 'imported_track');
+    } catch (err) {
+      logger.error('Ошибка импорта по ссылке', { message: err.message });
+      ctx.reply('Не удалось скачать трек по ссылке. Проверь ссылку или попробуй прислать файл напрямую.');
+    }
   }
 });
 
@@ -129,6 +208,7 @@ bot.action(/preset:(.+)/, async (ctx) => {
       targetLufs: preset.targetLufs,
       truePeak: preset.truePeak,
       ...presets.getPresetOptions(preset),
+      preGainDb: preset.preGainDb || 0,
     });
 
     await ctx.replyWithAudio({ source: processedPath });

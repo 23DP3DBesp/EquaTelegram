@@ -59,6 +59,18 @@
   .row button { flex: 1; }
   .row input[type=text] { flex: 2; margin-bottom: 0; }
   .row > button.small-save { flex: 1; margin-bottom: 0; }
+  .player-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .player-actions button { min-height: 46px; margin-bottom: 0; }
+  .control-card { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-dim); }
+  .control-card input[type=range] { width: 100%; accent-color: var(--accent); }
+  .value-pill { display: inline-flex; align-items: center; justify-content: center; width: fit-content; padding: 4px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 600; }
+  .band-controls { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+  .band-control { flex: 0 0 56px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .band-control input[type=range] { width: 8px; height: 110px; writing-mode: vertical-lr; direction: rtl; accent-color: var(--accent); }
+  .band-control .band-label { font-size: 10px; color: var(--text-dim); text-align: center; }
+  .band-control .band-value { font-size: 10px; color: var(--accent); font-weight: 700; }
+  .pro-hint { font-size: 11px; color: var(--text-faint); margin-top: 6px; }
+  .tabs { position: sticky; top: 0; z-index: 18; padding-top: 2px; padding-bottom: 6px; background: rgba(6, 3, 5, 0.85); backdrop-filter: blur(10px); }
   button { cursor: pointer; }
   button.ghost { background: transparent; border: 1px solid var(--panel-border); color: var(--text-dim); }
   button.accent-btn {
@@ -162,13 +174,14 @@
 
   <h3>Быстрые пресеты</h3>
   <div class="panel">
+    <div class="hint" style="margin-top: 0; margin-bottom: 10px; text-align: left;">Для W211 с базовой акустикой лучше выбирать пресет «Машина: бас + слышимость» — он даёт более плотный бас и лучшее проникновение вокала через салон.</div>
     <div class="tiles" id="systemPresetTiles"></div>
   </div>
 
   <div class="panel">
     <select id="trackSelect"><option>Загружаю список треков...</option></select>
 
-    <div class="row">
+    <div class="row player-actions">
       <button id="playBtn" class="accent-btn">▶ Играть</button>
       <button id="abBtn" class="ghost">🅰️/🅱️ Оригинал</button>
       <button id="resetBtn">↺ Сброс</button>
@@ -182,7 +195,16 @@
       <input type="range" id="volSlider" min="-15" max="15" value="0" step="1">
       <canvas id="eqCanvas" width="320" height="220"></canvas>
     </div>
+    <div class="row" style="margin-top: 8px;">
+      <label class="control-card" style="flex: 1; min-width: 140px;">
+        Предусиление
+        <input type="range" id="preGainSlider" min="-6" max="6" step="0.5" value="0">
+        <span id="preGainValue" class="value-pill">0.0 dB</span>
+      </label>
+    </div>
     <div class="hint">Таскай точки на графике пальцем. Долгое нажатие на точку — сброс этой полосы в 0</div>
+    <div class="pro-hint">Для машины лучше сначала выбрать пресет «Машина: бас + слышимость», а затем аккуратно подвинуть 10 полос ниже.</div>
+    <div id="bandControls" class="band-controls"></div>
 
     <canvas id="spectrumCanvas" width="320" height="70" style="margin-top:10px;"></canvas>
     <div class="hint">Спектр-визуализатор в реальном времени</div>
@@ -261,6 +283,13 @@
       <button id="batchApplyBtn" class="accent-btn small-save">Применить ко всем отмеченным</button>
     </div>
     <div id="batchResult" class="hint"></div>
+  </div>
+
+  <h3>Импорт по ссылке</h3>
+  <div class="panel">
+    <input type="text" id="importUrlInput" placeholder="Вставь ссылку из Spotify, SoundCloud или другого поддерживаемого источника">
+    <button id="importUrlBtn" class="accent-btn" style="width:100%;">⬇️ Добавить трек по ссылке</button>
+    <div class="hint">Если сервис защищён или не даёт доступ к аудио, импорт может не сработать — тогда лучше прислать файл напрямую.</div>
   </div>
 
   <h3>Треки (<span id="tracksCount">0</span>)</h3>
@@ -363,6 +392,7 @@ let audioCtx = null, sourceNode = null, filters = [];
 let masterGain = null, dryGain = null, wetGain = null, analyser = null;
 let audioEl = null, isPlaying = false, currentTrackId = null, currentPresetLabel = null;
 let gains = BANDS.map(() => 0);
+let freqs = [...BANDS];
 let tracksData = [];
 let systemPresets = [];
 let isOriginalMode = false;
@@ -380,6 +410,8 @@ const playBtn = document.getElementById('playBtn');
 const abBtn = document.getElementById('abBtn');
 const resetBtn = document.getElementById('resetBtn');
 const volSlider = document.getElementById('volSlider');
+const preGainSlider = document.getElementById('preGainSlider');
+const preGainValue = document.getElementById('preGainValue');
 
 const mpPlayBtn = document.getElementById('mpPlayBtn');
 const mpTrackName = document.getElementById('mpTrackName');
@@ -387,6 +419,46 @@ const mpPresetName = document.getElementById('mpPresetName');
 const mpProgress = document.getElementById('mpProgress');
 
 function dbToGain(db) { return Math.pow(10, db / 20); }
+
+function updatePreGainUi() {
+  const value = parseFloat(preGainSlider.value || 0);
+  preGainValue.textContent = `${value > 0 ? '+' : ''}${value.toFixed(1)} dB`;
+}
+
+function syncBandControls() {
+  document.querySelectorAll('#bandControls .band-control').forEach((card, i) => {
+    const slider = card.querySelector('input');
+    if (slider) slider.value = gains[i] ?? 0;
+    const label = card.querySelector('.band-label');
+    if (label) label.textContent = freqs[i] >= 1000 ? `${(freqs[i] / 1000).toFixed(2)}k` : Math.round(freqs[i]);
+    const value = card.querySelector('.band-value');
+    if (value) value.textContent = `${(gains[i] || 0) > 0 ? '+' : ''}${gains[i] || 0} dB`;
+  });
+}
+
+function renderBandControls() {
+  const el = document.getElementById('bandControls');
+  el.innerHTML = '';
+  BANDS.forEach((_, i) => {
+    const card = document.createElement('div');
+    card.className = 'band-control';
+    const label = document.createElement('div');
+    label.className = 'band-label';
+    label.textContent = freqs[i] >= 1000 ? `${(freqs[i] / 1000).toFixed(2)}k` : Math.round(freqs[i]);
+    const slider = document.createElement('input');
+    slider.type = 'range'; slider.min = MIN_DB; slider.max = MAX_DB; slider.step = '1'; slider.value = gains[i] ?? 0;
+    slider.addEventListener('input', () => {
+      gains[i] = parseInt(slider.value, 10);
+      applyGainsToFilters();
+      drawGraph();
+      syncBandControls();
+    });
+    const value = document.createElement('div');
+    value.className = 'band-value';
+    value.textContent = `${(gains[i] || 0) > 0 ? '+' : ''}${gains[i] || 0} dB`;
+    card.appendChild(label); card.appendChild(slider); card.appendChild(value); el.appendChild(card);
+  });
+}
 
 // ---------------- Загрузка треков (с поиском/сортировкой/тегами/плейлистами) ----------------
 async function loadTracks() {
@@ -540,7 +612,7 @@ function setupAudioForUrl(url) {
   });
 
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = dbToGain(parseFloat(volSlider.value));
+  masterGain.gain.value = dbToGain(parseFloat(volSlider.value) + parseFloat(preGainSlider.value));
 
   dryGain = audioCtx.createGain(); dryGain.gain.value = 0; // оригинал выключен по умолчанию
   wetGain = audioCtx.createGain(); wetGain.gain.value = 1; // обработанный звук включён
@@ -592,17 +664,29 @@ abBtn.addEventListener('click', () => {
   abBtn.textContent = isOriginalMode ? '🅰️/🅱️ Обработанный' : '🅰️/🅱️ Оригинал';
 });
 
-volSlider.addEventListener('input', () => { if (masterGain) masterGain.gain.value = dbToGain(parseFloat(volSlider.value)); });
+volSlider.addEventListener('input', () => { if (masterGain) masterGain.gain.value = dbToGain(parseFloat(volSlider.value) + parseFloat(preGainSlider.value)); });
+preGainSlider.addEventListener('input', () => {
+  updatePreGainUi();
+  if (masterGain) masterGain.gain.value = dbToGain(parseFloat(volSlider.value) + parseFloat(preGainSlider.value));
+});
 
 resetBtn.addEventListener('click', () => {
   gains = BANDS.map(() => 0);
+  freqs = [...BANDS];
   volSlider.value = 0;
+  preGainSlider.value = 0;
+  updatePreGainUi();
   if (masterGain) masterGain.gain.value = 1;
   applyGainsToFilters();
   drawGraph();
+  syncBandControls();
 });
 
-function applyGainsToFilters() { filters.forEach((f, i) => { if (f) f.gain.value = gains[i]; }); }
+function applyGainsToFilters() { filters.forEach((f, i) => {
+  if (!f) return;
+  f.gain.value = gains[i];
+  f.frequency.value = clampFreq(freqs[i]);
+}); }
 
 // прогресс мини-плеера
 function updateMiniProgress() {
@@ -679,6 +763,15 @@ function freqToX(freq) {
   const minLog = Math.log10(BANDS[0]), maxLog = Math.log10(BANDS[BANDS.length - 1]);
   return PAD_LEFT + ((Math.log10(freq) - minLog) / (maxLog - minLog)) * w;
 }
+function xToFreq(x) {
+  const w = canvas.width - PAD_LEFT - PAD_RIGHT;
+  const minLog = Math.log10(BANDS[0]), maxLog = Math.log10(BANDS[BANDS.length - 1]);
+  const t = Math.max(0, Math.min(1, (x - PAD_LEFT) / w));
+  return Math.pow(10, minLog + t * (maxLog - minLog));
+}
+function clampFreq(freq) {
+  return Math.max(20, Math.min(20000, freq));
+}
 function dbToY(db) {
   const h = canvas.height - PAD_TOP - PAD_BOTTOM;
   return PAD_TOP + ((db - MAX_DB) / (MIN_DB - MAX_DB)) * h;
@@ -703,14 +796,14 @@ function drawGraph() {
   ctx2d.beginPath(); ctx2d.moveTo(PAD_LEFT, dbToY(0)); ctx2d.lineTo(canvas.width - PAD_RIGHT, dbToY(0)); ctx2d.stroke();
 
   ctx2d.strokeStyle = '#2ea6ff'; ctx2d.lineWidth = 2; ctx2d.beginPath();
-  BANDS.forEach((freq, i) => {
-    const x = freqToX(freq), y = dbToY(gains[i]);
+  BANDS.forEach((_, i) => {
+    const x = freqToX(freqs[i]), y = dbToY(gains[i]);
     if (i === 0) ctx2d.moveTo(x, y); else ctx2d.lineTo(x, y);
   });
   ctx2d.stroke();
 
-  BANDS.forEach((freq, i) => {
-    const x = freqToX(freq), y = dbToY(gains[i]);
+  BANDS.forEach((_, i) => {
+    const x = freqToX(freqs[i]), y = dbToY(gains[i]);
     ctx2d.beginPath(); ctx2d.arc(x, y, 7, 0, Math.PI * 2);
     ctx2d.fillStyle = draggingIndex === i ? '#ff5f5f' : '#ffffff'; ctx2d.fill();
     ctx2d.strokeStyle = '#2ea6ff'; ctx2d.lineWidth = 2; ctx2d.stroke();
@@ -752,8 +845,9 @@ function startDrag(e) {
     gains[draggingIndex] = 0;
     applyGainsToFilters();
     drawGraph();
+    syncBandControls();
     if (navigator.vibrate) navigator.vibrate(30);
-  }, 550);
+  }, 450);
   updateDrag(e);
 }
 function updateDrag(e) {
@@ -762,8 +856,10 @@ function updateDrag(e) {
   clearTimeout(longPressTimer);
   const pos = getPointerPos(e);
   gains[draggingIndex] = Math.round(yToDb(pos.y));
+  freqs[draggingIndex] = clampFreq(xToFreq(pos.x));
   applyGainsToFilters();
   drawGraph();
+  syncBandControls();
 }
 function endDrag() { clearTimeout(longPressTimer); draggingIndex = null; drawGraph(); }
 
@@ -806,10 +902,14 @@ async function loadSystemPresets() {
 
 function applySystemPreset(p, silent) {
   gains = [...p.bands];
+  freqs = [...BANDS];
   volSlider.value = 0;
-  if (masterGain) masterGain.gain.value = 1;
+  preGainSlider.value = p.options?.preGainDb || 0;
+  updatePreGainUi();
+  if (masterGain) masterGain.gain.value = dbToGain(parseFloat(volSlider.value) + parseFloat(preGainSlider.value));
   applyGainsToFilters();
   drawGraph();
+  syncBandControls();
   currentPresetLabel = p.key;
   mpPresetName.textContent = p.name;
   document.getElementById('fxCompressor').checked = !!p.options.compressor;
@@ -851,10 +951,14 @@ function renderPresets(presetsData) {
 }
 function applyCustomPreset(preset) {
   gains = [...preset.gains];
+  freqs = [...BANDS];
   volSlider.value = preset.volume_db;
-  if (masterGain) masterGain.gain.value = dbToGain(preset.volume_db);
+  preGainSlider.value = preset.options?.preGainDb || 0;
+  updatePreGainUi();
+  if (masterGain) masterGain.gain.value = dbToGain(parseFloat(volSlider.value) + parseFloat(preGainSlider.value));
   applyGainsToFilters();
   drawGraph();
+  syncBandControls();
   currentPresetLabel = preset.name;
   mpPresetName.textContent = preset.name;
   statusEl.textContent = `Применён пресет "${preset.name}"`;
@@ -925,6 +1029,21 @@ document.getElementById('createPlaylistBtn').addEventListener('click', async () 
   loadPlaylists();
 });
 
+document.getElementById('importUrlBtn').addEventListener('click', async () => {
+  const url = document.getElementById('importUrlInput').value.trim();
+  if (!url) return;
+  statusEl.textContent = 'Скачиваю трек по ссылке...';
+  const res = await fetch('/api/tracks/import-url', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ url }) });
+  const data = await res.json();
+  if (res.ok) {
+    document.getElementById('importUrlInput').value = '';
+    await loadTracks();
+    statusEl.textContent = `Трек добавлен: ${data.name}`;
+  } else {
+    statusEl.textContent = data.error || 'Не удалось импортировать трек';
+  }
+});
+
 // ---------------- Групповая обработка ----------------
 document.getElementById('batchApplyBtn').addEventListener('click', async () => {
   const ids = [...document.querySelectorAll('.batch-check:checked')].map((c) => Number(c.dataset.id));
@@ -987,6 +1106,7 @@ function currentFxOptions() {
     trimSilence: document.getElementById('fxTrim').checked,
     fadeInSec: parseFloat(document.getElementById('fxFadeIn').value) || 0,
     fadeOutSec: parseFloat(document.getElementById('fxFadeOut').value) || 0,
+    preGainDb: parseFloat(preGainSlider.value) || 0,
   };
 }
 document.getElementById('renderBtn').addEventListener('click', async () => {
@@ -1035,6 +1155,8 @@ function generateStarfield() {
 // ---------------- Старт ----------------
 generateStarfield();
 drawGraph();
+renderBandControls();
+updatePreGainUi();
 loadSystemPresets();
 loadTracks();
 loadPresets();

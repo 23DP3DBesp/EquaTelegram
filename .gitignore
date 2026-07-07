@@ -4,3 +4,5 @@ tracks/
 bassbot.db
 logs/
 backups/
+bassbot.db-wal
+bassbot.db-shm

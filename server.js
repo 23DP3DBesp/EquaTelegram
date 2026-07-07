@@ -1,12 +1,16 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
+const ffmpeg = require('fluent-ffmpeg');
 const db = require('./db');
 const presets = require('./presets');
 const { processTrack, legacyPresetToBands } = require('./audioProcessor');
 const config = require('./config');
 const logger = require('./logger');
 
+const execFileAsync = promisify(execFile);
 const app = express();
 
 const ORIGINAL_DIR = path.join(__dirname, 'tracks', 'original');
@@ -15,6 +19,40 @@ const BACKUP_DIR = path.join(__dirname, 'backups');
 [ORIGINAL_DIR, PROCESSED_DIR, BACKUP_DIR].forEach((d) => {
   if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
 });
+
+function getDuration(filePath) {
+  return new Promise((resolve) => {
+    ffmpeg.ffprobe(filePath, (err, data) => {
+      if (err) return resolve(null);
+      resolve(data.format ? data.format.duration : null);
+    });
+  });
+}
+
+function getPythonCommand() {
+  const candidates = [
+    process.env.PYTHON,
+    process.env.PYTHON_PATH,
+    'C:/Python314/python.exe',
+    'C:\\Python314\\python.exe',
+    'python',
+    'python3',
+    'py',
+  ].filter(Boolean);
+
+  return candidates[0];
+}
+
+function downloadFromUrl(url, savePath) {
+  const pythonCommand = getPythonCommand();
+  const args = ['-m', 'yt_dlp', '-f', 'bestaudio/best', '--extract-audio', '--audio-format', 'mp3', '--audio-quality', '0', '--output', savePath, '--no-playlist', '--restrict-filenames', '--no-warnings', url];
+
+  if (pythonCommand === 'py') {
+    return execFileAsync(pythonCommand, ['-3', ...args], { maxBuffer: 1024 * 1024 * 100 });
+  }
+
+  return execFileAsync(pythonCommand, args, { maxBuffer: 1024 * 1024 * 100 });
+}
 
 app.use(express.json());
 app.use((req, res, next) => {
@@ -44,6 +82,41 @@ app.get('/api/tracks', (req, res) => {
       url: `/tracks/${encodeURIComponent(t.filename)}`,
     }));
   res.json(tracks);
+});
+
+app.post('/api/tracks/import-url', async (req, res) => {
+  const { url } = req.body || {};
+  if (!url || !/^https?:\/\//i.test(url)) {
+    return res.status(400).json({ error: 'Нужна корректная ссылка' });
+  }
+
+  const tracksCount = db.getAllTracks().length;
+  if (tracksCount >= config.MAX_TRACKS) {
+    return res.status(400).json({ error: `Библиотека заполнена (лимит ${config.MAX_TRACKS} треков)` });
+  }
+
+  try {
+    const safeName = `import_${Date.now()}`;
+    const outputTemplate = path.join(ORIGINAL_DIR, `${safeName}.%(ext)s`);
+    await downloadFromUrl(url, outputTemplate);
+
+    const files = fs.readdirSync(ORIGINAL_DIR).filter((f) => f.startsWith(`${safeName}.`));
+    const downloadedFile = files.find((f) => f.endsWith('.mp3')) || files[0];
+    if (!downloadedFile) {
+      return res.status(500).json({ error: 'Не удалось получить файл по ссылке' });
+    }
+
+    const fullPath = path.join(ORIGINAL_DIR, downloadedFile);
+    const duration = await getDuration(fullPath);
+    const stat = fs.statSync(fullPath);
+    const displayName = path.basename(downloadedFile, path.extname(downloadedFile)).replace(/[_-]+/g, ' ').trim() || 'Импортированный трек';
+    const trackId = db.addTrack(downloadedFile, displayName, { duration, sizeBytes: stat.size });
+
+    res.json({ success: true, trackId, filename: downloadedFile, name: displayName });
+  } catch (err) {
+    logger.error('Ошибка импорта по ссылке', { message: err.message, url });
+    res.status(500).json({ error: 'Не удалось скачать трек по ссылке. Проверь ссылку и доступность источника.' });
+  }
 });
 
 app.delete('/api/tracks/:id', (req, res) => {
@@ -208,6 +281,7 @@ app.post('/api/render', async (req, res) => {
     fadeInSec,
     fadeOutSec,
     trimSilence,
+    preGainDb,
     label,
   } = req.body;
 
@@ -230,6 +304,7 @@ app.post('/api/render', async (req, res) => {
       fadeInSec: fadeInSec || 0,
       fadeOutSec: fadeOutSec || 0,
       trimSilence: !!trimSilence,
+      preGainDb: preGainDb || 0,
     });
 
     db.addProcessedFile(track.id, safeLabel, outFilename);
