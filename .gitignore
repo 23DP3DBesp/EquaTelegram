@@ -5,4 +5,4 @@ bassbot.db
 logs/
 backups/
 bassbot.db-wal
-bassbot.db-shm
+bassbot.db-shm'bassbot.db' 
