@@ -13,7 +13,8 @@ const config = require('./config');
 const logger = require('./logger');
 
 // ВАЖНО: задайте URL Mini App в .env через MINIAPP_URL
-const MINIAPP_URL = process.env.MINIAPP_URL || 'https://cupped-hesitate-geologic.ngrok-free.dev';
+// По умолчанию используем ваш домен (подставьте другой в .env при необходимости)
+const MINIAPP_URL = process.env.MINIAPP_URL || 'https://qwelskw.tech';
 
 const execFileAsync = promisify(execFile);
 const bot = new Telegraf(process.env.BOT_TOKEN);
