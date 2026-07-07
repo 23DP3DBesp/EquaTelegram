@@ -17,207 +17,300 @@
     --text: #f3e7e8;
     --text-dim: #8a7377;
     --text-faint: #5a474a;
+    --wave: #2ea6ff;
   }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    min-height: 100%;
-  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; }
   body {
-    padding: 18px;
+    padding: 14px 14px 96px;
     font-family: -apple-system, "Segoe UI", sans-serif;
     background: var(--bg);
     color: var(--text);
     position: relative;
     overflow-x: hidden;
   }
-  #starfield {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    background: var(--bg-glow), var(--bg);
-    overflow: hidden;
-  }
-  .star {
-    position: absolute;
-    width: 2px;
-    height: 2px;
-    background: #fff;
-    border-radius: 50%;
-    animation: twinkle 3.5s ease-in-out infinite;
-  }
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.15; }
-    50% { opacity: 0.9; }
-  }
+  #starfield { position: fixed; inset: 0; z-index: -1; background: var(--bg-glow), var(--bg); overflow: hidden; }
+  .star { position: absolute; width: 2px; height: 2px; background: #fff; border-radius: 50%; animation: twinkle 3.5s ease-in-out infinite; }
+  @keyframes twinkle { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.9; } }
+
+  .top-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
   .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: var(--accent-soft);
-    border: 1px solid var(--panel-border);
-    border-radius: 999px;
-    padding: 4px 10px;
-    margin-bottom: 10px;
+    display: inline-flex; align-items: center; gap: 6px; font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent); background: var(--accent-soft);
+    border: 1px solid var(--panel-border); border-radius: 999px; padding: 4px 10px; margin-bottom: 10px;
   }
-  h1 {
-    font-size: 20px;
-    margin: 0 0 4px;
-    letter-spacing: -0.01em;
+  select.theme-select {
+    width: auto; font-size: 12px; padding: 6px 8px; margin: 0;
+    background: #1c1114; color: var(--text); border: 1px solid var(--panel-border); border-radius: 10px;
   }
-  .subtitle {
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-bottom: 16px;
-  }
-  h3 {
-    font-size: 13px;
-    margin: 20px 0 10px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 600;
-  }
+  h1 { font-size: 20px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .subtitle { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; }
+  h3 { font-size: 13px; margin: 20px 0 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
   .panel {
-    background: var(--panel);
-    border: 1px solid var(--panel-border);
-    border-radius: 18px;
-    padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.2), 0 20px 40px -20px rgba(230, 41, 63, 0.15);
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 18px; padding: 16px;
+    margin-bottom: 16px; box-shadow: 0 0 0 1px rgba(0,0,0,0.2), 0 20px 40px -20px rgba(230, 41, 63, 0.15);
   }
-  select, button, input[type=text] {
-    font-size: 15px;
-    padding: 10px 14px;
-    border-radius: 12px;
-    border: 1px solid transparent;
-    background: #1c1114;
-    color: var(--text);
-    margin-bottom: 10px;
+  select, button, input[type=text], input[type=number] {
+    font-size: 15px; padding: 10px 14px; border-radius: 12px; border: 1px solid transparent;
+    background: #1c1114; color: var(--text); margin-bottom: 10px; font-family: inherit;
   }
-  select, input[type=text] {
-    width: 100%;
-    border: 1px solid var(--panel-border);
-  }
-  .row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  select, input[type=text] { width: 100%; border: 1px solid var(--panel-border); }
+  .row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
   .row button { flex: 1; }
   .row input[type=text] { flex: 2; margin-bottom: 0; }
   .row > button.small-save { flex: 1; margin-bottom: 0; }
-  #playBtn {
-    background: linear-gradient(135deg, var(--accent), var(--accent-dim));
-    font-weight: bold;
+  button { cursor: pointer; }
+  button.ghost { background: transparent; border: 1px solid var(--panel-border); color: var(--text-dim); }
+  button.accent-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dim)); font-weight: bold; color: #fff;
     box-shadow: 0 8px 20px -8px rgba(230, 41, 63, 0.6);
   }
-  #bassBtn { background: #2a1216; border: 1px solid var(--panel-border); }
   #resetBtn { background: #1c1114; border: 1px solid var(--panel-border); color: var(--text-dim); }
-  #savePresetBtn {
-    background: linear-gradient(135deg, var(--accent), var(--accent-dim));
-    font-weight: bold;
+
+  /* ---- Tabs ---- */
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; }
+  .tab-btn {
+    flex: 1; min-width: 74px; text-align: center; padding: 9px 6px; font-size: 12.5px; margin: 0;
+    background: #150b0d; border: 1px solid var(--panel-border); border-radius: 12px; color: var(--text-dim);
   }
-  .graph-wrap {
-    display: flex;
-    gap: 6px;
-    margin-top: 4px;
-    touch-action: none;
+  .tab-btn.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 600; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ---- Graph / EQ ---- */
+  .graph-wrap { display: flex; gap: 6px; margin-top: 4px; touch-action: none; }
+  #volSlider { writing-mode: vertical-lr; direction: rtl; width: 24px; height: 260px; accent-color: var(--accent); }
+  canvas { background: #0c0708; border: 1px solid var(--panel-border); border-radius: 12px; touch-action: none; max-width: 100%; }
+  .hint { font-size: 12px; color: var(--text-faint); margin-top: 10px; text-align: center; }
+  .status { font-size: 13px; color: var(--accent); margin-bottom: 6px; min-height: 16px; }
+
+  /* ---- Big preset tiles ---- */
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tile {
+    background: #150b0d; border: 1px solid var(--panel-border); border-radius: 14px; padding: 14px 10px;
+    text-align: center; font-size: 13px; color: var(--text); margin: 0; line-height: 1.3;
   }
-  #volSlider {
-    writing-mode: vertical-lr;
-    direction: rtl;
-    width: 24px;
-    height: 260px;
-    accent-color: var(--accent);
+  .tile:active, .tile.applied { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .tile small { display: block; color: var(--text-faint); font-size: 10.5px; margin-top: 3px; }
+
+  /* ---- List items (presets/tracks/history/playlists) ---- */
+  .list-item {
+    display: flex; align-items: center; gap: 10px; background: #150b0d; border: 1px solid var(--panel-border);
+    border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; flex-wrap: wrap;
   }
-  canvas {
-    background: #0c0708;
-    border: 1px solid var(--panel-border);
-    border-radius: 12px;
-    touch-action: none;
-  }
-  .hint {
-    font-size: 12px;
-    color: var(--text-faint);
-    margin-top: 10px;
-    text-align: center;
-  }
-  .status {
-    font-size: 13px;
-    color: var(--accent);
-    margin-bottom: 6px;
-    min-height: 16px;
-  }
-  .preset-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #150b0d;
-    border: 1px solid var(--panel-border);
-    border-radius: 12px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-  }
-  .preset-dot {
-    width: 8px;
-    height: 8px;
-    min-width: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 8px 1px var(--accent);
-  }
-  .preset-item span {
-    flex: 1;
-    font-size: 14px;
-  }
-  .preset-item button {
-    margin: 0;
-    padding: 7px 12px;
-    font-size: 13px;
-  }
+  .list-item .dot { width: 8px; height: 8px; min-width: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px 1px var(--accent); }
+  .list-item .main { flex: 1; min-width: 120px; font-size: 14px; }
+  .list-item .sub { display: block; font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+  .list-item button { margin: 0; padding: 7px 12px; font-size: 12.5px; }
   .apply-btn { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--panel-border); }
   .delete-btn { background: transparent; color: var(--text-faint); border: 1px solid var(--panel-border); }
   .empty-hint { font-size: 13px; color: var(--text-faint); }
+
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .chip {
+    font-size: 12px; padding: 5px 10px; border-radius: 999px; background: #1c1114; border: 1px solid var(--panel-border);
+    color: var(--text-dim); margin: 0;
+  }
+  .chip.active { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+  .checkbox-row input { margin: 0; width: auto; }
+
+  /* ---- Mini player (fixed, visible on every tab) ---- */
+  #miniPlayer {
+    position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 20;
+    background: linear-gradient(135deg, #180d10, #0e070a); border: 1px solid var(--panel-border);
+    border-radius: 16px; padding: 10px 12px; box-shadow: 0 12px 30px -10px rgba(0,0,0,0.6);
+  }
+  #miniPlayer .mp-row { display: flex; align-items: center; gap: 10px; }
+  #miniPlayer .mp-title { flex: 1; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #miniPlayer .mp-title small { display: block; color: var(--text-faint); font-size: 10.5px; }
+  #miniPlayer button { margin: 0; padding: 8px 12px; font-size: 13px; }
+  #mpProgress { width: 100%; accent-color: var(--accent); margin: 6px 0 0; }
+
+  .fx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .fx-grid label { font-size: 12px; color: var(--text-dim); display: flex; flex-direction: column; gap: 4px; }
+  .fx-grid input[type=number] { width: 100%; margin: 0; }
 </style>
 </head>
 <body>
 
 <div id="starfield"></div>
 
-<div class="eyebrow">● live tuning</div>
-<h1>🎧 Bass Bot — Эквалайзер</h1>
-<div class="subtitle">Настрой звук один раз — слушай где угодно</div>
-
-<div class="panel">
-  <select id="trackSelect">
-    <option>Загружаю список треков...</option>
+<div class="top-row">
+  <div>
+    <div class="eyebrow">● live tuning</div>
+    <h1>🎧 Bass Bot — Эквалайзер</h1>
+    <div class="subtitle">Настрой звук один раз — слушай где угодно</div>
+  </div>
+  <select id="themeSelect" class="theme-select">
+    <option value="red">Тёмная (красная)</option>
+    <option value="blue">Тёмная (синяя)</option>
+    <option value="light">Светлая</option>
   </select>
-
-  <div class="row">
-    <button id="playBtn">▶ Играть</button>
-    <button id="bassBtn">🔊 Bass Boost</button>
-    <button id="resetBtn">↺ Сброс</button>
-  </div>
-
-  <div class="status" id="status"></div>
-
-  <div class="graph-wrap">
-    <input type="range" id="volSlider" min="-15" max="15" value="0" step="1">
-    <canvas id="eqCanvas" width="320" height="260"></canvas>
-  </div>
-
-  <div class="hint">Таскай точки на графике пальцем, чтобы менять звук в реальном времени</div>
 </div>
 
-<h3>Мои пресеты</h3>
-<div class="panel">
-  <div id="presetsList"><div class="empty-hint">Пока нет сохранённых пресетов</div></div>
+<div class="tabs">
+  <button class="tab-btn active" data-tab="player">Плеер</button>
+  <button class="tab-btn" data-tab="library">Библиотека</button>
+  <button class="tab-btn" data-tab="presets">Пресеты</button>
+  <button class="tab-btn" data-tab="history">История</button>
+</div>
 
-  <div class="row">
-    <input type="text" id="presetNameInput" placeholder="Имя пресета, напр. Трасса">
-    <button id="savePresetBtn" class="small-save">💾 Сохранить текущий</button>
+<!-- ===================== ВКЛАДКА: ПЛЕЕР ===================== -->
+<div class="tab-panel active" id="tab-player">
+
+  <h3>Быстрые пресеты</h3>
+  <div class="panel">
+    <div class="tiles" id="systemPresetTiles"></div>
   </div>
+
+  <div class="panel">
+    <select id="trackSelect"><option>Загружаю список треков...</option></select>
+
+    <div class="row">
+      <button id="playBtn" class="accent-btn">▶ Играть</button>
+      <button id="abBtn" class="ghost">🅰️/🅱️ Оригинал</button>
+      <button id="resetBtn">↺ Сброс</button>
+    </div>
+
+    <div class="status" id="status"></div>
+
+    <canvas id="waveCanvas" width="320" height="46"></canvas>
+
+    <div class="graph-wrap">
+      <input type="range" id="volSlider" min="-15" max="15" value="0" step="1">
+      <canvas id="eqCanvas" width="320" height="220"></canvas>
+    </div>
+    <div class="hint">Таскай точки на графике пальцем. Долгое нажатие на точку — сброс этой полосы в 0</div>
+
+    <canvas id="spectrumCanvas" width="320" height="70" style="margin-top:10px;"></canvas>
+    <div class="hint">Спектр-визуализатор в реальном времени</div>
+  </div>
+
+  <h3>Экспорт обработанного трека</h3>
+  <div class="panel">
+    <div class="fx-grid">
+      <label>Многополосный компрессор
+        <input type="checkbox" id="fxCompressor">
+      </label>
+      <label>De-esser (убрать шипящие)
+        <input type="checkbox" id="fxDeEsser">
+      </label>
+      <label>Стерео-расширение (1.0 = норма)
+        <input type="number" id="fxStereo" min="0.5" max="2" step="0.1" value="1.0">
+      </label>
+      <label>Убрать тишину в начале/конце
+        <input type="checkbox" id="fxTrim">
+      </label>
+      <label>Fade-in, сек
+        <input type="number" id="fxFadeIn" min="0" max="10" step="0.5" value="0">
+      </label>
+      <label>Fade-out, сек
+        <input type="number" id="fxFadeOut" min="0" max="10" step="0.5" value="0">
+      </label>
+      <label>Целевая громкость (LUFS)
+        <input type="number" id="fxLufs" min="-20" max="-5" step="1" value="-10">
+      </label>
+      <label>True Peak (dB)
+        <input type="number" id="fxTruePeak" min="-2" max="0" step="0.1" value="-0.5">
+      </label>
+    </div>
+    <button id="renderBtn" class="accent-btn" style="width:100%;">💾 Сделать файл с текущими настройками</button>
+    <div id="renderResult" class="hint"></div>
+  </div>
+
+  <h3>Избранное</h3>
+  <div class="panel">
+    <button id="addFavoriteBtn" class="ghost" style="width:100%;">⭐ Добавить текущий трек+пресет в избранное</button>
+    <div id="favoritesList"><div class="empty-hint">Пока нет избранного</div></div>
+  </div>
+</div>
+
+<!-- ===================== ВКЛАДКА: БИБЛИОТЕКА ===================== -->
+<div class="tab-panel" id="tab-library">
+
+  <h3>Поиск и сортировка</h3>
+  <div class="panel">
+    <input type="text" id="searchInput" placeholder="Поиск по названию трека...">
+    <select id="sortSelect">
+      <option value="date">Сначала новые</option>
+      <option value="name">По названию</option>
+      <option value="duration">По длительности</option>
+      <option value="recent">Недавно играл</option>
+    </select>
+    <div class="chips" id="tagChips"></div>
+    <select id="playlistFilter">
+      <option value="">Все плейлисты</option>
+    </select>
+  </div>
+
+  <h3>Плейлисты</h3>
+  <div class="panel">
+    <div class="row">
+      <input type="text" id="playlistNameInput" placeholder="Название плейлиста">
+      <button id="createPlaylistBtn" class="small-save accent-btn">+ Создать</button>
+    </div>
+    <div id="playlistsList"><div class="empty-hint">Пока нет плейлистов</div></div>
+  </div>
+
+  <h3>Групповая обработка</h3>
+  <div class="panel">
+    <div class="row">
+      <select id="batchPresetSelect"></select>
+      <button id="batchApplyBtn" class="accent-btn small-save">Применить ко всем отмеченным</button>
+    </div>
+    <div id="batchResult" class="hint"></div>
+  </div>
+
+  <h3>Треки (<span id="tracksCount">0</span>)</h3>
+  <div class="panel">
+    <div id="tracksLibraryList"><div class="empty-hint">Треков пока нет</div></div>
+  </div>
+</div>
+
+<!-- ===================== ВКЛАДКА: ПРЕСЕТЫ ===================== -->
+<div class="tab-panel" id="tab-presets">
+
+  <h3>Мои пресеты</h3>
+  <div class="panel">
+    <div id="presetsList"><div class="empty-hint">Пока нет сохранённых пресетов</div></div>
+    <div class="row">
+      <input type="text" id="presetNameInput" placeholder="Имя пресета, напр. Трасса">
+      <button id="savePresetBtn" class="small-save accent-btn">💾 Сохранить текущий</button>
+    </div>
+  </div>
+
+  <h3>Топ пресетов (по популярности)</h3>
+  <div class="panel">
+    <div id="topPresetsList"><div class="empty-hint">Пока нет данных</div></div>
+  </div>
+
+  <h3>Поделиться пресетом</h3>
+  <div class="panel">
+    <div class="row">
+      <input type="text" id="importCodeInput" placeholder="Вставь код пресета сюда">
+      <button id="importPresetBtn" class="small-save">📥 Импортировать</button>
+    </div>
+    <div class="hint">Экспортировать код можно кнопкой "Код" у своего пресета в списке выше</div>
+  </div>
+</div>
+
+<!-- ===================== ВКЛАДКА: ИСТОРИЯ ===================== -->
+<div class="tab-panel" id="tab-history">
+  <h3>Недавно слушал</h3>
+  <div class="panel">
+    <div id="historyList"><div class="empty-hint">История пуста</div></div>
+  </div>
+</div>
+
+<!-- ===================== МИНИ-ПЛЕЕР (всегда виден) ===================== -->
+<div id="miniPlayer">
+  <div class="mp-row">
+    <button id="mpPlayBtn" class="accent-btn">▶</button>
+    <div class="mp-title"><span id="mpTrackName">Трек не выбран</span><small id="mpPresetName">—</small></div>
+  </div>
+  <input type="range" id="mpProgress" min="0" max="100" value="0">
 </div>
 
 <script>
@@ -229,137 +322,277 @@ const BANDS = [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 const MIN_DB = -25;
 const MAX_DB = 25;
 
-let audioCtx = null;
-let sourceNode = null;
-let filters = [];
-let masterGain = null;
-let audioEl = null;
-let isPlaying = false;
-let currentTrackId = null;
+// ---------------- Темы ----------------
+const THEMES = {
+  red: { bg:'#060305', panel:'#120a0d', panelBorder:'rgba(179,25,42,0.35)', accent:'#e6293f', accentSoft:'rgba(230,41,63,0.16)', accentDim:'#8c1c29', text:'#f3e7e8', textDim:'#8a7377', textFaint:'#5a474a' },
+  blue: { bg:'#05070d', panel:'#0a1220', panelBorder:'rgba(41,110,230,0.35)', accent:'#2979e6', accentSoft:'rgba(41,121,230,0.16)', accentDim:'#1c4a8c', text:'#e7edf3', textDim:'#77879a', textFaint:'#475a6c' },
+  light: { bg:'#f4f2f1', panel:'#ffffff', panelBorder:'rgba(179,25,42,0.2)', accent:'#c21f34', accentSoft:'rgba(194,31,52,0.1)', accentDim:'#e6293f', text:'#20161a', textDim:'#6b5a5d', textFaint:'#a08e91' },
+};
+function applyTheme(name) {
+  const t = THEMES[name] || THEMES.red;
+  const r = document.documentElement.style;
+  r.setProperty('--bg', t.bg);
+  r.setProperty('--panel', t.panel);
+  r.setProperty('--panel-border', t.panelBorder);
+  r.setProperty('--accent', t.accent);
+  r.setProperty('--accent-soft', t.accentSoft);
+  r.setProperty('--accent-dim', t.accentDim);
+  r.setProperty('--text', t.text);
+  r.setProperty('--text-dim', t.textDim);
+  r.setProperty('--text-faint', t.textFaint);
+  localStorage.setItem('bb_theme', name);
+}
+const themeSelect = document.getElementById('themeSelect');
+const savedTheme = localStorage.getItem('bb_theme') || 'red';
+themeSelect.value = savedTheme;
+applyTheme(savedTheme);
+themeSelect.addEventListener('change', () => applyTheme(themeSelect.value));
+
+// ---------------- Табы ----------------
+document.querySelectorAll('.tab-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------------- Состояние аудио ----------------
+let audioCtx = null, sourceNode = null, filters = [];
+let masterGain = null, dryGain = null, wetGain = null, analyser = null;
+let audioEl = null, isPlaying = false, currentTrackId = null, currentPresetLabel = null;
+let gains = BANDS.map(() => 0);
+let tracksData = [];
+let systemPresets = [];
+let isOriginalMode = false;
 
 const canvas = document.getElementById('eqCanvas');
 const ctx2d = canvas.getContext('2d');
+const waveCanvas = document.getElementById('waveCanvas');
+const waveCtx = waveCanvas.getContext('2d');
+const spectrumCanvas = document.getElementById('spectrumCanvas');
+const spectrumCtx = spectrumCanvas.getContext('2d');
+
 const statusEl = document.getElementById('status');
 const trackSelect = document.getElementById('trackSelect');
 const playBtn = document.getElementById('playBtn');
-const bassBtn = document.getElementById('bassBtn');
+const abBtn = document.getElementById('abBtn');
 const resetBtn = document.getElementById('resetBtn');
 const volSlider = document.getElementById('volSlider');
-const presetsListEl = document.getElementById('presetsList');
-const presetNameInput = document.getElementById('presetNameInput');
-const savePresetBtn = document.getElementById('savePresetBtn');
 
-let gains = BANDS.map(() => 0);
-let tracksData = [];
+const mpPlayBtn = document.getElementById('mpPlayBtn');
+const mpTrackName = document.getElementById('mpTrackName');
+const mpPresetName = document.getElementById('mpPresetName');
+const mpProgress = document.getElementById('mpProgress');
 
-// ---- Треки ----
+function dbToGain(db) { return Math.pow(10, db / 20); }
+
+// ---------------- Загрузка треков (с поиском/сортировкой/тегами/плейлистами) ----------------
 async function loadTracks() {
   try {
-    const res = await fetch('/api/tracks');
+    const search = document.getElementById('searchInput').value.trim();
+    const sort = document.getElementById('sortSelect').value;
+    const playlistId = document.getElementById('playlistFilter').value;
+    const activeTag = document.querySelector('.chip.active');
+    const tag = activeTag ? activeTag.dataset.tag : '';
+
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (sort) params.set('sort', sort);
+    if (playlistId) params.set('playlistId', playlistId);
+    if (tag) params.set('tag', tag);
+
+    const res = await fetch('/api/tracks?' + params.toString());
     tracksData = await res.json();
+
+    document.getElementById('tracksCount').textContent = tracksData.length;
 
     trackSelect.innerHTML = '';
     if (tracksData.length === 0) {
       trackSelect.innerHTML = '<option>Нет треков — пришли файл боту</option>';
-      return;
+    } else {
+      tracksData.forEach((t) => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = t.displayName;
+        trackSelect.appendChild(opt);
+      });
+      if (!currentTrackId || !tracksData.find((t) => t.id === currentTrackId)) {
+        selectTrackById(tracksData[0].id);
+      }
     }
-
-    tracksData.forEach((t) => {
-      const opt = document.createElement('option');
-      opt.value = t.id;
-      opt.textContent = t.displayName;
-      trackSelect.appendChild(opt);
-    });
-
-    selectTrackById(tracksData[0].id);
+    renderLibraryList();
+    renderTagChips();
   } catch (err) {
     statusEl.textContent = 'Ошибка загрузки списка треков';
     console.error(err);
   }
 }
 
+function renderTagChips() {
+  fetch('/api/tags').then((r) => r.json()).then((tags) => {
+    const el = document.getElementById('tagChips');
+    const current = el.querySelector('.chip.active');
+    const activeTag = current ? current.dataset.tag : null;
+    el.innerHTML = '';
+    tags.forEach((tag) => {
+      const chip = document.createElement('button');
+      chip.className = 'chip' + (tag === activeTag ? ' active' : '');
+      chip.textContent = tag;
+      chip.dataset.tag = tag;
+      chip.onclick = () => {
+        const wasActive = chip.classList.contains('active');
+        el.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+        if (!wasActive) chip.classList.add('active');
+        loadTracks();
+      };
+      el.appendChild(chip);
+    });
+  });
+}
+
+function renderLibraryList() {
+  const el = document.getElementById('tracksLibraryList');
+  el.innerHTML = '';
+  if (tracksData.length === 0) {
+    el.innerHTML = '<div class="empty-hint">Треков пока нет</div>';
+    return;
+  }
+  tracksData.forEach((t) => {
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    item.innerHTML = `
+      <input type="checkbox" class="batch-check" data-id="${t.id}">
+      <div class="main">${t.displayName}
+        <span class="sub">${t.tags.join(', ') || 'без тегов'}${t.duration ? ' · ' + formatTime(t.duration) : ''}</span>
+      </div>`;
+    const playB = document.createElement('button');
+    playB.className = 'apply-btn';
+    playB.textContent = '▶';
+    playB.onclick = () => { selectTrackById(t.id); document.querySelector('[data-tab=player]').click(); };
+    const tagB = document.createElement('button');
+    tagB.className = 'ghost';
+    tagB.textContent = '🏷️';
+    tagB.onclick = async () => {
+      const tags = prompt('Теги через запятую:', t.tags.join(','));
+      if (tags !== null) {
+        await fetch(`/api/tracks/${t.id}/tags`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ tags }) });
+        loadTracks();
+      }
+    };
+    const delB = document.createElement('button');
+    delB.className = 'delete-btn';
+    delB.textContent = '✕';
+    delB.onclick = async () => { await fetch(`/api/tracks/${t.id}`, { method: 'DELETE' }); loadTracks(); };
+    item.appendChild(playB);
+    item.appendChild(tagB);
+    item.appendChild(delB);
+    el.appendChild(item);
+  });
+}
+
+function formatTime(sec) {
+  if (!sec) return '';
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+document.getElementById('searchInput').addEventListener('input', debounce(loadTracks, 300));
+document.getElementById('sortSelect').addEventListener('change', loadTracks);
+document.getElementById('playlistFilter').addEventListener('change', loadTracks);
+
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
 function selectTrackById(id) {
   const track = tracksData.find((t) => t.id === Number(id));
   if (!track) return;
   currentTrackId = track.id;
+  trackSelect.value = track.id;
   setupAudioForUrl(track.url);
+  drawWaveform(track.url);
+  mpTrackName.textContent = track.displayName;
 }
 
-trackSelect.addEventListener('change', () => {
-  selectTrackById(trackSelect.value);
-});
+trackSelect.addEventListener('change', () => selectTrackById(trackSelect.value));
 
+// ---------------- Аудио-граф: EQ + A/B (dry/wet) + анализатор спектра ----------------
 function setupAudioForUrl(url) {
-  if (audioEl) {
-    audioEl.pause();
-    audioEl.src = '';
-  }
+  if (audioEl) { audioEl.pause(); audioEl.src = ''; }
 
   audioEl = new Audio(url);
   audioEl.crossOrigin = 'anonymous';
   audioEl.loop = true;
   isPlaying = false;
   playBtn.textContent = '▶ Играть';
+  mpPlayBtn.textContent = '▶';
+  isOriginalMode = false;
+  abBtn.textContent = '🅰️/🅱️ Оригинал';
 
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
   sourceNode = audioCtx.createMediaElementSource(audioEl);
 
   filters = BANDS.map((freq) => {
     const f = audioCtx.createBiquadFilter();
-    f.type = 'peaking';
-    f.frequency.value = freq;
-    f.Q.value = 1.0;
-    f.gain.value = 0;
+    f.type = 'peaking'; f.frequency.value = freq; f.Q.value = 1.0; f.gain.value = 0;
     return f;
   });
 
   masterGain = audioCtx.createGain();
   masterGain.gain.value = dbToGain(parseFloat(volSlider.value));
 
+  dryGain = audioCtx.createGain(); dryGain.gain.value = 0; // оригинал выключен по умолчанию
+  wetGain = audioCtx.createGain(); wetGain.gain.value = 1; // обработанный звук включён
+
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 128;
+
+  // wet-путь: source -> filters... -> wetGain
   let node = sourceNode;
-  filters.forEach((f) => {
-    node.connect(f);
-    node = f;
-  });
-  node.connect(masterGain);
-  masterGain.connect(audioCtx.destination);
+  filters.forEach((f) => { node.connect(f); node = f; });
+  node.connect(wetGain);
+
+  // dry-путь: source -> dryGain (в обход фильтров)
+  sourceNode.connect(dryGain);
+
+  wetGain.connect(masterGain);
+  dryGain.connect(masterGain);
+  masterGain.connect(analyser);
+  analyser.connect(audioCtx.destination);
 
   applyGainsToFilters();
   statusEl.textContent = 'Трек загружен, можно нажать "Играть"';
+  drawSpectrum();
+  updateMiniProgress();
 }
 
-function dbToGain(db) {
-  return Math.pow(10, db / 20);
-}
+playBtn.addEventListener('click', togglePlay);
+mpPlayBtn.addEventListener('click', togglePlay);
 
-playBtn.addEventListener('click', async () => {
+async function togglePlay() {
   if (!audioEl) return;
   if (audioCtx.state === 'suspended') await audioCtx.resume();
-
   if (isPlaying) {
     audioEl.pause();
-    playBtn.textContent = '▶ Играть';
+    playBtn.textContent = '▶ Играть'; mpPlayBtn.textContent = '▶';
   } else {
     await audioEl.play();
-    playBtn.textContent = '⏸ Пауза';
+    playBtn.textContent = '⏸ Пауза'; mpPlayBtn.textContent = '⏸';
+    if (currentTrackId) fetch(`/api/tracks/${currentTrackId}/play`, { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ presetName: currentPresetLabel }) });
   }
   isPlaying = !isPlaying;
+}
+
+abBtn.addEventListener('click', () => {
+  isOriginalMode = !isOriginalMode;
+  if (!wetGain || !dryGain) return;
+  wetGain.gain.value = isOriginalMode ? 0 : 1;
+  dryGain.gain.value = isOriginalMode ? 1 : 0;
+  abBtn.textContent = isOriginalMode ? '🅰️/🅱️ Обработанный' : '🅰️/🅱️ Оригинал';
 });
 
-volSlider.addEventListener('input', () => {
-  if (masterGain) {
-    masterGain.gain.value = dbToGain(parseFloat(volSlider.value));
-  }
-});
-
-bassBtn.addEventListener('click', () => {
-  gains[0] = 10; gains[1] = 8; gains[2] = 5;
-  applyGainsToFilters();
-  drawGraph();
-});
+volSlider.addEventListener('input', () => { if (masterGain) masterGain.gain.value = dbToGain(parseFloat(volSlider.value)); });
 
 resetBtn.addEventListener('click', () => {
   gains = BANDS.map(() => 0);
@@ -369,163 +602,118 @@ resetBtn.addEventListener('click', () => {
   drawGraph();
 });
 
-function applyGainsToFilters() {
-  filters.forEach((f, i) => {
-    f.gain.value = gains[i];
-  });
+function applyGainsToFilters() { filters.forEach((f, i) => { if (f) f.gain.value = gains[i]; }); }
+
+// прогресс мини-плеера
+function updateMiniProgress() {
+  if (!audioEl) return requestAnimationFrame(updateMiniProgress);
+  if (audioEl.duration) mpProgress.value = (audioEl.currentTime / audioEl.duration) * 100;
+  requestAnimationFrame(updateMiniProgress);
 }
-
-// ---- Пресеты ----
-async function loadPresets() {
-  try {
-    const res = await fetch('/api/presets');
-    const presetsData = await res.json();
-    renderPresets(presetsData);
-  } catch (err) {
-    console.error('Ошибка загрузки пресетов', err);
-  }
-}
-
-function renderPresets(presetsData) {
-  presetsListEl.innerHTML = '';
-  if (presetsData.length === 0) {
-    presetsListEl.innerHTML = '<div class="empty-hint">Пока нет сохранённых пресетов</div>';
-    return;
-  }
-
-  presetsData.forEach((preset) => {
-    const item = document.createElement('div');
-    item.className = 'preset-item';
-
-    const dot = document.createElement('div');
-    dot.className = 'preset-dot';
-
-    const label = document.createElement('span');
-    label.textContent = preset.name;
-
-    const applyButton = document.createElement('button');
-    applyButton.className = 'apply-btn';
-    applyButton.textContent = 'Применить';
-    applyButton.onclick = () => applyPreset(preset);
-
-    const deleteButton = document.createElement('button');
-    deleteButton.className = 'delete-btn';
-    deleteButton.textContent = '✕';
-    deleteButton.onclick = () => deletePreset(preset.id);
-
-    item.appendChild(dot);
-    item.appendChild(label);
-    item.appendChild(applyButton);
-    item.appendChild(deleteButton);
-    presetsListEl.appendChild(item);
-  });
-}
-
-function applyPreset(preset) {
-  gains = [...preset.gains];
-  volSlider.value = preset.volume_db;
-  if (masterGain) masterGain.gain.value = dbToGain(preset.volume_db);
-  applyGainsToFilters();
-  drawGraph();
-  statusEl.textContent = `Применён пресет "${preset.name}"`;
-}
-
-async function deletePreset(id) {
-  await fetch(`/api/presets/${id}`, { method: 'DELETE' });
-  loadPresets();
-}
-
-savePresetBtn.addEventListener('click', async () => {
-  const name = presetNameInput.value.trim();
-  if (!name) {
-    tg.showAlert('Введи имя пресета перед сохранением');
-    return;
-  }
-
-  const volumeDb = parseFloat(volSlider.value);
-
-  await fetch('/api/presets', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, volumeDb, gains }),
-  });
-
-  presetNameInput.value = '';
-  loadPresets();
-  statusEl.textContent = `Пресет "${name}" сохранён`;
+mpProgress.addEventListener('input', () => {
+  if (audioEl && audioEl.duration) audioEl.currentTime = (mpProgress.value / 100) * audioEl.duration;
 });
 
-// ---- Отрисовка графика ----
-const PAD_LEFT = 30;
-const PAD_RIGHT = 12;
-const PAD_TOP = 10;
-const PAD_BOTTOM = 20;
+// ---------------- Waveform-превью ----------------
+async function drawWaveform(url) {
+  waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+  waveCtx.fillStyle = '#5c7185'; waveCtx.font = '10px sans-serif';
+  waveCtx.fillText('Строю превью волны...', 6, 24);
+  try {
+    const tmpCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = await (await fetch(url)).arrayBuffer();
+    const audioBuffer = await tmpCtx.decodeAudioData(buf);
+    const data = audioBuffer.getChannelData(0);
+    const samples = 120;
+    const blockSize = Math.floor(data.length / samples);
+    const peaks = [];
+    for (let i = 0; i < samples; i++) {
+      let max = 0;
+      for (let j = 0; j < blockSize; j++) {
+        const v = Math.abs(data[i * blockSize + j] || 0);
+        if (v > max) max = v;
+      }
+      peaks.push(max);
+    }
+    waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+    const w = waveCanvas.width / samples;
+    waveCtx.fillStyle = 'var(--wave)';
+    waveCtx.fillStyle = '#2ea6ff';
+    peaks.forEach((p, i) => {
+      const h = Math.max(2, p * waveCanvas.height);
+      waveCtx.fillRect(i * w, (waveCanvas.height - h) / 2, w - 1, h);
+    });
+    tmpCtx.close();
+  } catch (err) {
+    waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+    waveCtx.fillStyle = '#5c7185';
+    waveCtx.fillText('Превью недоступно для этого файла', 6, 24);
+  }
+}
 
+// ---------------- Спектр-визуализатор ----------------
+function drawSpectrum() {
+  if (!analyser) return;
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+
+  function render() {
+    requestAnimationFrame(render);
+    if (!analyser) return;
+    analyser.getByteFrequencyData(dataArray);
+    spectrumCtx.clearRect(0, 0, spectrumCanvas.width, spectrumCanvas.height);
+    const barWidth = spectrumCanvas.width / bufferLength;
+    for (let i = 0; i < bufferLength; i++) {
+      const barHeight = (dataArray[i] / 255) * spectrumCanvas.height;
+      spectrumCtx.fillStyle = i < bufferLength / 3 ? '#e6293f' : (i < bufferLength * 2/3 ? '#e69329' : '#2ea6ff');
+      spectrumCtx.fillRect(i * barWidth, spectrumCanvas.height - barHeight, barWidth - 1, barHeight);
+    }
+  }
+  render();
+}
+
+// ---------------- Отрисовка EQ-графика ----------------
+const PAD_LEFT = 30, PAD_RIGHT = 12, PAD_TOP = 10, PAD_BOTTOM = 20;
 function freqToX(freq) {
   const w = canvas.width - PAD_LEFT - PAD_RIGHT;
-  const minLog = Math.log10(BANDS[0]);
-  const maxLog = Math.log10(BANDS[BANDS.length - 1]);
-  const t = (Math.log10(freq) - minLog) / (maxLog - minLog);
-  return PAD_LEFT + t * w;
+  const minLog = Math.log10(BANDS[0]), maxLog = Math.log10(BANDS[BANDS.length - 1]);
+  return PAD_LEFT + ((Math.log10(freq) - minLog) / (maxLog - minLog)) * w;
 }
-
 function dbToY(db) {
   const h = canvas.height - PAD_TOP - PAD_BOTTOM;
-  const t = (db - MAX_DB) / (MIN_DB - MAX_DB);
-  return PAD_TOP + t * h;
+  return PAD_TOP + ((db - MAX_DB) / (MIN_DB - MAX_DB)) * h;
 }
-
 function yToDb(y) {
   const h = canvas.height - PAD_TOP - PAD_BOTTOM;
-  const t = (y - PAD_TOP) / h;
-  let db = MAX_DB + t * (MIN_DB - MAX_DB);
+  let db = MAX_DB + ((y - PAD_TOP) / h) * (MIN_DB - MAX_DB);
   return Math.max(MIN_DB, Math.min(MAX_DB, db));
 }
 
 function drawGraph() {
   ctx2d.clearRect(0, 0, canvas.width, canvas.height);
-
-  ctx2d.strokeStyle = '#2a3947';
-  ctx2d.lineWidth = 1;
-  ctx2d.fillStyle = '#5c7185';
-  ctx2d.font = '10px sans-serif';
+  ctx2d.strokeStyle = '#2a3947'; ctx2d.lineWidth = 1; ctx2d.fillStyle = '#5c7185'; ctx2d.font = '10px sans-serif';
 
   [25, 10, 0, -10, -25].forEach((db) => {
     const y = dbToY(db);
-    ctx2d.beginPath();
-    ctx2d.moveTo(PAD_LEFT, y);
-    ctx2d.lineTo(canvas.width - PAD_RIGHT, y);
-    ctx2d.stroke();
+    ctx2d.beginPath(); ctx2d.moveTo(PAD_LEFT, y); ctx2d.lineTo(canvas.width - PAD_RIGHT, y); ctx2d.stroke();
     ctx2d.fillText(db.toString(), 2, y + 3);
   });
 
   ctx2d.strokeStyle = '#3d5266';
-  ctx2d.beginPath();
-  ctx2d.moveTo(PAD_LEFT, dbToY(0));
-  ctx2d.lineTo(canvas.width - PAD_RIGHT, dbToY(0));
-  ctx2d.stroke();
+  ctx2d.beginPath(); ctx2d.moveTo(PAD_LEFT, dbToY(0)); ctx2d.lineTo(canvas.width - PAD_RIGHT, dbToY(0)); ctx2d.stroke();
 
-  ctx2d.strokeStyle = '#2ea6ff';
-  ctx2d.lineWidth = 2;
-  ctx2d.beginPath();
+  ctx2d.strokeStyle = '#2ea6ff'; ctx2d.lineWidth = 2; ctx2d.beginPath();
   BANDS.forEach((freq, i) => {
-    const x = freqToX(freq);
-    const y = dbToY(gains[i]);
-    if (i === 0) ctx2d.moveTo(x, y);
-    else ctx2d.lineTo(x, y);
+    const x = freqToX(freq), y = dbToY(gains[i]);
+    if (i === 0) ctx2d.moveTo(x, y); else ctx2d.lineTo(x, y);
   });
   ctx2d.stroke();
 
   BANDS.forEach((freq, i) => {
-    const x = freqToX(freq);
-    const y = dbToY(gains[i]);
-    ctx2d.beginPath();
-    ctx2d.arc(x, y, 7, 0, Math.PI * 2);
-    ctx2d.fillStyle = draggingIndex === i ? '#ff5f5f' : '#ffffff';
-    ctx2d.fill();
-    ctx2d.strokeStyle = '#2ea6ff';
-    ctx2d.lineWidth = 2;
-    ctx2d.stroke();
+    const x = freqToX(freq), y = dbToY(gains[i]);
+    ctx2d.beginPath(); ctx2d.arc(x, y, 7, 0, Math.PI * 2);
+    ctx2d.fillStyle = draggingIndex === i ? '#ff5f5f' : '#ffffff'; ctx2d.fill();
+    ctx2d.strokeStyle = '#2ea6ff'; ctx2d.lineWidth = 2; ctx2d.stroke();
   });
 
   ctx2d.fillStyle = '#5c7185';
@@ -537,6 +725,8 @@ function drawGraph() {
 }
 
 let draggingIndex = null;
+let longPressTimer = null;
+let longPressFired = false;
 
 function getPointerPos(e) {
   const rect = canvas.getBoundingClientRect();
@@ -544,13 +734,10 @@ function getPointerPos(e) {
   const clientY = e.touches ? e.touches[0].clientY : e.clientY;
   return { x: clientX - rect.left, y: clientY - rect.top };
 }
-
 function findNearestBand(x) {
-  let nearest = 0;
-  let minDist = Infinity;
+  let nearest = 0, minDist = Infinity;
   BANDS.forEach((freq, i) => {
-    const bx = freqToX(freq);
-    const dist = Math.abs(bx - x);
+    const dist = Math.abs(freqToX(freq) - x);
     if (dist < minDist) { minDist = dist; nearest = i; }
   });
   return nearest;
@@ -559,54 +746,301 @@ function findNearestBand(x) {
 function startDrag(e) {
   const pos = getPointerPos(e);
   draggingIndex = findNearestBand(pos.x);
+  longPressFired = false;
+  longPressTimer = setTimeout(() => {
+    longPressFired = true;
+    gains[draggingIndex] = 0;
+    applyGainsToFilters();
+    drawGraph();
+    if (navigator.vibrate) navigator.vibrate(30);
+  }, 550);
   updateDrag(e);
 }
-
 function updateDrag(e) {
-  if (draggingIndex === null) return;
+  if (draggingIndex === null || longPressFired) return;
   e.preventDefault();
+  clearTimeout(longPressTimer);
   const pos = getPointerPos(e);
   gains[draggingIndex] = Math.round(yToDb(pos.y));
   applyGainsToFilters();
   drawGraph();
 }
-
-function endDrag() {
-  draggingIndex = null;
-  drawGraph();
-}
+function endDrag() { clearTimeout(longPressTimer); draggingIndex = null; drawGraph(); }
 
 canvas.addEventListener('mousedown', startDrag);
 canvas.addEventListener('mousemove', updateDrag);
 window.addEventListener('mouseup', endDrag);
-
 canvas.addEventListener('touchstart', startDrag, { passive: false });
 canvas.addEventListener('touchmove', updateDrag, { passive: false });
 canvas.addEventListener('touchend', endDrag);
 
-// ---- Звёздное небо на фоне ----
+// ---------------- Системные (быстрые) пресеты — большие плитки ----------------
+async function loadSystemPresets() {
+  const res = await fetch('/api/presets/system');
+  systemPresets = await res.json();
+  const el = document.getElementById('systemPresetTiles');
+  el.innerHTML = '';
+  systemPresets.forEach((p) => {
+    const tile = document.createElement('button');
+    tile.className = 'tile';
+    tile.innerHTML = `${p.name}<small>${p.category}</small>`;
+    tile.onclick = () => applySystemPreset(p);
+    el.appendChild(tile);
+  });
+
+  const batchSel = document.getElementById('batchPresetSelect');
+  batchSel.innerHTML = '';
+  systemPresets.forEach((p) => {
+    const opt = document.createElement('option');
+    opt.value = p.key; opt.textContent = p.name;
+    batchSel.appendChild(opt);
+  });
+
+  // автозагрузка последнего использованного пресета
+  const lastKey = localStorage.getItem('bb_last_preset');
+  if (lastKey) {
+    const found = systemPresets.find((p) => p.key === lastKey);
+    if (found) applySystemPreset(found, true);
+  }
+}
+
+function applySystemPreset(p, silent) {
+  gains = [...p.bands];
+  volSlider.value = 0;
+  if (masterGain) masterGain.gain.value = 1;
+  applyGainsToFilters();
+  drawGraph();
+  currentPresetLabel = p.key;
+  mpPresetName.textContent = p.name;
+  document.getElementById('fxCompressor').checked = !!p.options.compressor;
+  document.getElementById('fxDeEsser').checked = !!p.options.deEsser;
+  document.getElementById('fxStereo').value = p.options.stereoWidth || 1.0;
+  document.getElementById('fxLufs').value = p.targetLufs;
+  document.getElementById('fxTruePeak').value = p.truePeak;
+  document.querySelectorAll('.tile').forEach((t) => t.classList.remove('applied'));
+  localStorage.setItem('bb_last_preset', p.key);
+  if (!silent) statusEl.textContent = `Применён пресет "${p.name}"`;
+}
+
+// ---------------- Пользовательские пресеты ----------------
+async function loadPresets() {
+  const res = await fetch('/api/presets');
+  renderPresets(await res.json());
+}
+function renderPresets(presetsData) {
+  const el = document.getElementById('presetsList');
+  el.innerHTML = '';
+  if (presetsData.length === 0) { el.innerHTML = '<div class="empty-hint">Пока нет сохранённых пресетов</div>'; return; }
+  presetsData.forEach((preset) => {
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    item.innerHTML = `<div class="dot"></div><div class="main">${preset.name}</div>`;
+    const applyB = document.createElement('button'); applyB.className = 'apply-btn'; applyB.textContent = 'Применить';
+    applyB.onclick = () => applyCustomPreset(preset);
+    const codeB = document.createElement('button'); codeB.className = 'ghost'; codeB.textContent = 'Код';
+    codeB.onclick = async () => {
+      const r = await fetch(`/api/presets/${preset.id}/export`);
+      const { code } = await r.json();
+      prompt('Скопируй код и отправь другу:', code);
+    };
+    const delB = document.createElement('button'); delB.className = 'delete-btn'; delB.textContent = '✕';
+    delB.onclick = async () => { await fetch(`/api/presets/${preset.id}`, { method: 'DELETE' }); loadPresets(); };
+    item.appendChild(applyB); item.appendChild(codeB); item.appendChild(delB);
+    el.appendChild(item);
+  });
+}
+function applyCustomPreset(preset) {
+  gains = [...preset.gains];
+  volSlider.value = preset.volume_db;
+  if (masterGain) masterGain.gain.value = dbToGain(preset.volume_db);
+  applyGainsToFilters();
+  drawGraph();
+  currentPresetLabel = preset.name;
+  mpPresetName.textContent = preset.name;
+  statusEl.textContent = `Применён пресет "${preset.name}"`;
+}
+
+document.getElementById('savePresetBtn').addEventListener('click', async () => {
+  const name = document.getElementById('presetNameInput').value.trim();
+  if (!name) { tg.showAlert('Введи имя пресета перед сохранением'); return; }
+  const volumeDb = parseFloat(volSlider.value);
+  await fetch('/api/presets', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, volumeDb, gains, category: 'custom', options: currentFxOptions() }),
+  });
+  document.getElementById('presetNameInput').value = '';
+  loadPresets();
+  statusEl.textContent = `Пресет "${name}" сохранён`;
+});
+
+document.getElementById('importPresetBtn').addEventListener('click', async () => {
+  const code = document.getElementById('importCodeInput').value.trim();
+  if (!code) return;
+  const res = await fetch('/api/presets/import', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ code }) });
+  if (res.ok) { document.getElementById('importCodeInput').value = ''; loadPresets(); statusEl.textContent = 'Пресет импортирован'; }
+  else tg.showAlert('Не удалось разобрать код пресета');
+});
+
+async function loadTopPresets() {
+  const res = await fetch('/api/presets/top');
+  const data = await res.json();
+  const el = document.getElementById('topPresetsList');
+  el.innerHTML = '';
+  if (data.length === 0 || data.every(d => d.uses === 0)) { el.innerHTML = '<div class="empty-hint">Пока нет данных об использовании</div>'; return; }
+  data.filter(d => d.uses > 0).forEach((p) => {
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    item.innerHTML = `<div class="dot"></div><div class="main">${p.name}<span class="sub">${p.uses} × в избранном</span></div>`;
+    el.appendChild(item);
+  });
+}
+
+// ---------------- Плейлисты ----------------
+async function loadPlaylists() {
+  const res = await fetch('/api/playlists');
+  const data = await res.json();
+  const el = document.getElementById('playlistsList');
+  const filterEl = document.getElementById('playlistFilter');
+  el.innerHTML = '';
+  filterEl.innerHTML = '<option value="">Все плейлисты</option>';
+  if (data.length === 0) el.innerHTML = '<div class="empty-hint">Пока нет плейлистов</div>';
+  data.forEach((pl) => {
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    item.innerHTML = `<div class="dot"></div><div class="main">${pl.name}</div>`;
+    const delB = document.createElement('button'); delB.className = 'delete-btn'; delB.textContent = '✕';
+    delB.onclick = async () => { await fetch(`/api/playlists/${pl.id}`, { method: 'DELETE' }); loadPlaylists(); loadTracks(); };
+    item.appendChild(delB);
+    el.appendChild(item);
+
+    const opt = document.createElement('option'); opt.value = pl.id; opt.textContent = pl.name;
+    filterEl.appendChild(opt);
+  });
+}
+document.getElementById('createPlaylistBtn').addEventListener('click', async () => {
+  const name = document.getElementById('playlistNameInput').value.trim();
+  if (!name) return;
+  await fetch('/api/playlists', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
+  document.getElementById('playlistNameInput').value = '';
+  loadPlaylists();
+});
+
+// ---------------- Групповая обработка ----------------
+document.getElementById('batchApplyBtn').addEventListener('click', async () => {
+  const ids = [...document.querySelectorAll('.batch-check:checked')].map((c) => Number(c.dataset.id));
+  if (ids.length === 0) { tg.showAlert('Отметь хотя бы один трек галочкой'); return; }
+  const presetKey = document.getElementById('batchPresetSelect').value;
+  document.getElementById('batchResult').textContent = 'Обрабатываю...';
+  const res = await fetch('/api/batch-process', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ trackIds: ids, presetKey }) });
+  const { results } = await res.json();
+  const ok = results.filter(r => r.url).length;
+  document.getElementById('batchResult').textContent = `Готово: ${ok} из ${results.length} треков обработано`;
+});
+
+// ---------------- Избранное ----------------
+document.getElementById('addFavoriteBtn').addEventListener('click', async () => {
+  if (!currentTrackId) return;
+  await fetch('/api/favorites', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ trackId: currentTrackId, presetId: null }) });
+  loadFavorites();
+  statusEl.textContent = 'Добавлено в избранное';
+});
+async function loadFavorites() {
+  const res = await fetch('/api/favorites');
+  const data = await res.json();
+  const el = document.getElementById('favoritesList');
+  el.innerHTML = '';
+  if (data.length === 0) { el.innerHTML = '<div class="empty-hint">Пока нет избранного</div>'; return; }
+  data.forEach((f) => {
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    item.innerHTML = `<div class="dot"></div><div class="main">${f.track_name}<span class="sub">${f.preset_name || 'без пресета'}</span></div>`;
+    const delB = document.createElement('button'); delB.className = 'delete-btn'; delB.textContent = '✕';
+    delB.onclick = async () => { await fetch(`/api/favorites/${f.favorite_id}`, { method: 'DELETE' }); loadFavorites(); };
+    item.appendChild(delB);
+    el.appendChild(item);
+  });
+}
+
+// ---------------- История ----------------
+async function loadHistory() {
+  const res = await fetch('/api/history');
+  const data = await res.json();
+  const el = document.getElementById('historyList');
+  el.innerHTML = '';
+  if (data.length === 0) { el.innerHTML = '<div class="empty-hint">История пуста</div>'; return; }
+  data.forEach((h) => {
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    const when = new Date(h.played_at).toLocaleString('ru-RU');
+    item.innerHTML = `<div class="dot"></div><div class="main">${h.track_name}<span class="sub">${h.preset_name || '—'} · ${when}</span></div>`;
+    el.appendChild(item);
+  });
+}
+document.querySelector('[data-tab=history]').addEventListener('click', loadHistory);
+
+// ---------------- Рендер / экспорт трека ----------------
+function currentFxOptions() {
+  return {
+    compressor: document.getElementById('fxCompressor').checked,
+    deEsser: document.getElementById('fxDeEsser').checked,
+    stereoWidth: parseFloat(document.getElementById('fxStereo').value) || 1.0,
+    trimSilence: document.getElementById('fxTrim').checked,
+    fadeInSec: parseFloat(document.getElementById('fxFadeIn').value) || 0,
+    fadeOutSec: parseFloat(document.getElementById('fxFadeOut').value) || 0,
+  };
+}
+document.getElementById('renderBtn').addEventListener('click', async () => {
+  if (!currentTrackId) { tg.showAlert('Сначала выбери трек'); return; }
+  const resEl = document.getElementById('renderResult');
+  resEl.textContent = 'Обрабатываю трек через ffmpeg (может занять немного времени)...';
+  const fx = currentFxOptions();
+  try {
+    const res = await fetch('/api/render', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        trackId: currentTrackId, bands: gains,
+        targetLufs: parseFloat(document.getElementById('fxLufs').value),
+        truePeak: parseFloat(document.getElementById('fxTruePeak').value),
+        ...fx,
+        label: currentPresetLabel || 'custom',
+      }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      resEl.innerHTML = `Готово! <a href="${data.url}" target="_blank" style="color:var(--accent)">Скачать файл</a>`;
+    } else {
+      resEl.textContent = 'Не удалось обработать трек: ' + (data.error || 'неизвестная ошибка');
+    }
+  } catch (err) {
+    resEl.textContent = 'Ошибка сети при обработке';
+  }
+});
+
+// ---------------- Звёздное небо на фоне ----------------
 function generateStarfield() {
   const container = document.getElementById('starfield');
-  const count = 90;
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < 90; i++) {
     const star = document.createElement('div');
     star.className = 'star';
     star.style.left = Math.random() * 100 + '%';
     star.style.top = Math.random() * 100 + '%';
     const size = Math.random() * 1.5 + 1;
-    star.style.width = size + 'px';
-    star.style.height = size + 'px';
+    star.style.width = size + 'px'; star.style.height = size + 'px';
     star.style.animationDelay = (Math.random() * 3.5) + 's';
     star.style.animationDuration = (2.5 + Math.random() * 3) + 's';
     container.appendChild(star);
   }
 }
 
-// ---- Старт ----
+// ---------------- Старт ----------------
 generateStarfield();
 drawGraph();
+loadSystemPresets();
 loadTracks();
 loadPresets();
+loadPlaylists();
+loadTopPresets();
+loadFavorites();
 </script>
 </body>
 </html>

@@ -3,35 +3,34 @@ const { Telegraf, Markup } = require('telegraf');
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const { processTrack } = require('./audioProcessor');
+const ffmpeg = require('fluent-ffmpeg');
+const { processTrack, legacyPresetToBands } = require('./audioProcessor');
 const presets = require('./presets');
 const db = require('./db');
+const config = require('./config');
+const logger = require('./logger');
 
-// ВАЖНО: сюда нужно вставить актуальную ссылку из ngrok
+// ВАЖНО: сюда нужно вставить актуальную ссылку из ngrok (или домен после деплоя)
 const MINIAPP_URL = 'https://cupped-hesitate-geologic.ngrok-free.dev';
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 const ORIGINAL_DIR = path.join(__dirname, 'tracks', 'original');
 const PROCESSED_DIR = path.join(__dirname, 'tracks', 'processed');
+[ORIGINAL_DIR, PROCESSED_DIR].forEach((d) => {
+  if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+});
 
 bot.start((ctx) => {
   ctx.reply(
     'Привет! Открой приложение или пришли аудиофайл — он сразу попадёт в твою библиотеку.',
-    Markup.inlineKeyboard([
-      Markup.button.webApp('🎧 Открыть Bass Bot', MINIAPP_URL)
-    ])
+    Markup.inlineKeyboard([Markup.button.webApp('🎧 Открыть Bass Bot', MINIAPP_URL)])
   );
 });
 
-// Функция скачивания файла по file_id
 async function downloadTelegramFile(fileId, savePath) {
   const link = await bot.telegram.getFileLink(fileId);
-  const response = await axios({
-    method: 'GET',
-    url: link.href,
-    responseType: 'stream',
-  });
+  const response = await axios({ method: 'GET', url: link.href, responseType: 'stream' });
 
   const writer = fs.createWriteStream(savePath);
   response.data.pipe(writer);
@@ -42,7 +41,15 @@ async function downloadTelegramFile(fileId, savePath) {
   });
 }
 
-// Временное хранилище: путь к скачанному файлу, ждущему выбора пресета (по chat id)
+function getDuration(filePath) {
+  return new Promise((resolve) => {
+    ffmpeg.ffprobe(filePath, (err, data) => {
+      if (err) return resolve(null);
+      resolve(data.format ? data.format.duration : null);
+    });
+  });
+}
+
 const pendingTracks = {};
 
 bot.on('audio', async (ctx) => {
@@ -60,6 +67,19 @@ bot.on('document', async (ctx) => {
 
 async function handleIncomingFile(ctx, fileObj) {
   try {
+    // ---- Проверка квоты ----
+    const tracksCount = db.getAllTracks().length;
+    if (tracksCount >= config.MAX_TRACKS) {
+      return ctx.reply(
+        `Библиотека заполнена (лимит ${config.MAX_TRACKS} треков). Удали что-нибудь в Mini App, прежде чем присылать новое.`
+      );
+    }
+
+    const sizeMb = (fileObj.file_size || 0) / (1024 * 1024);
+    if (sizeMb > config.MAX_FILE_SIZE_MB) {
+      return ctx.reply(`Файл слишком большой (${sizeMb.toFixed(1)} МБ). Лимит — ${config.MAX_FILE_SIZE_MB} МБ.`);
+    }
+
     await ctx.reply('Скачиваю трек...');
 
     const fileId = fileObj.file_id;
@@ -68,23 +88,24 @@ async function handleIncomingFile(ctx, fileObj) {
     const savePath = path.join(ORIGINAL_DIR, baseName);
 
     await downloadTelegramFile(fileId, savePath);
+    const duration = await getDuration(savePath);
+    const stat = fs.statSync(savePath);
 
-    // Сразу добавляем трек в базу — теперь он появится в Mini App
-    const trackId = db.addTrack(baseName, originalName);
-    console.log('Трек сохранён в библиотеку:', baseName, 'id=', trackId);
+    const trackId = db.addTrack(baseName, originalName, { duration, sizeBytes: stat.size });
+    logger.info('Трек сохранён в библиотеку', { baseName, trackId });
 
     pendingTracks[ctx.chat.id] = { savePath, baseName };
 
-    const buttons = Object.entries(presets).map(([key, preset]) =>
-      Markup.button.callback(preset.name, `preset:${key}`)
-    );
+    const buttons = Object.entries(presets)
+      .filter(([key]) => key !== 'BANDS' && key !== 'getPresetOptions')
+      .map(([key, preset]) => Markup.button.callback(preset.name, `preset:${key}`));
 
     await ctx.reply(
       'Трек добавлен в библиотеку! Открой Mini App, чтобы настроить его гибко, или выбери быстрый пресет ниже:',
       Markup.inlineKeyboard(buttons, { columns: 1 })
     );
   } catch (err) {
-    console.error('Ошибка при скачивании файла:', err);
+    logger.error('Ошибка при скачивании файла', { message: err.message });
     ctx.reply('Что-то пошло не так при скачивании файла 😕');
   }
 }
@@ -103,12 +124,17 @@ bot.action(/preset:(.+)/, async (ctx) => {
 
   try {
     const processedPath = path.join(PROCESSED_DIR, `${presetKey}_${pending.baseName}`);
-    await processTrack(pending.savePath, processedPath, preset);
+    await processTrack(pending.savePath, processedPath, {
+      bands: preset.bands || legacyPresetToBands(preset),
+      targetLufs: preset.targetLufs,
+      truePeak: preset.truePeak,
+      ...presets.getPresetOptions(preset),
+    });
 
     await ctx.replyWithAudio({ source: processedPath });
     await ctx.reply(`Готово! Пресет "${preset.name}" применён 🎧`);
   } catch (err) {
-    console.error('Ошибка при обработке файла:', err);
+    logger.error('Ошибка при обработке файла', { message: err.message });
     ctx.reply('Что-то пошло не так при обработке файла 😕');
   } finally {
     delete pendingTracks[ctx.chat.id];
@@ -116,7 +142,7 @@ bot.action(/preset:(.+)/, async (ctx) => {
 });
 
 bot.launch();
-console.log('Бот запущен!');
+logger.info('Бот запущен!');
 
 process.once('SIGINT', () => bot.stop('SIGINT'));
 process.once('SIGTERM', () => bot.stop('SIGTERM'));

@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  server:
+    build: .
+    command: node server.js
+    ports:
+      - '3000:3000'
+    env_file: .env
+    volumes:
+      - ./tracks:/app/tracks
+      - ./backups:/app/backups
+      - ./logs:/app/logs
+      - ./bassbot.db:/app/bassbot.db
+    restart: unless-stopped
+
+  bot:
+    build: .
+    command: node index.js
+    env_file: .env
+    volumes:
+      - ./tracks:/app/tracks
+      - ./backups:/app/backups
+      - ./logs:/app/logs
+      - ./bassbot.db:/app/bassbot.db
+    restart: unless-stopped
