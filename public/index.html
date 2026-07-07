@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bass Bot — Эквалайзер</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #060305;
+    --bg-glow: radial-gradient(ellipse 900px 600px at 15% -10%, rgba(179, 25, 42, 0.16), transparent 60%);
+    --panel: #120a0d;
+    --panel-border: rgba(179, 25, 42, 0.35);
+    --accent: #e6293f;
+    --accent-soft: rgba(230, 41, 63, 0.16);
+    --accent-dim: #8c1c29;
+    --text: #f3e7e8;
+    --text-dim: #8a7377;
+    --text-faint: #5a474a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    min-height: 100%;
+  }
+  body {
+    padding: 18px;
+    font-family: -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    position: relative;
+    overflow-x: hidden;
+  }
+  #starfield {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: var(--bg-glow), var(--bg);
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #fff;
+    border-radius: 50%;
+    animation: twinkle 3.5s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.9; }
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--panel-border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+  h3 {
+    font-size: 13px;
+    margin: 20px 0 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.2), 0 20px 40px -20px rgba(230, 41, 63, 0.15);
+  }
+  select, button, input[type=text] {
+    font-size: 15px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: #1c1114;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  select, input[type=text] {
+    width: 100%;
+    border: 1px solid var(--panel-border);
+  }
+  .row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .row button { flex: 1; }
+  .row input[type=text] { flex: 2; margin-bottom: 0; }
+  .row > button.small-save { flex: 1; margin-bottom: 0; }
+  #playBtn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+    font-weight: bold;
+    box-shadow: 0 8px 20px -8px rgba(230, 41, 63, 0.6);
+  }
+  #bassBtn { background: #2a1216; border: 1px solid var(--panel-border); }
+  #resetBtn { background: #1c1114; border: 1px solid var(--panel-border); color: var(--text-dim); }
+  #savePresetBtn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+    font-weight: bold;
+  }
+  .graph-wrap {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+    touch-action: none;
+  }
+  #volSlider {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 24px;
+    height: 260px;
+    accent-color: var(--accent);
+  }
+  canvas {
+    background: #0c0708;
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    touch-action: none;
+  }
+  .hint {
+    font-size: 12px;
+    color: var(--text-faint);
+    margin-top: 10px;
+    text-align: center;
+  }
+  .status {
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 6px;
+    min-height: 16px;
+  }
+  .preset-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #150b0d;
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+  .preset-dot {
+    width: 8px;
+    height: 8px;
+    min-width: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px 1px var(--accent);
+  }
+  .preset-item span {
+    flex: 1;
+    font-size: 14px;
+  }
+  .preset-item button {
+    margin: 0;
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+  .apply-btn { background: var(--accent-soft); color: var(--accent); border: 1px solid var(--panel-border); }
+  .delete-btn { background: transparent; color: var(--text-faint); border: 1px solid var(--panel-border); }
+  .empty-hint { font-size: 13px; color: var(--text-faint); }
+</style>
+</head>
+<body>
+
+<div id="starfield"></div>
+
+<div class="eyebrow">● live tuning</div>
+<h1>🎧 Bass Bot — Эквалайзер</h1>
+<div class="subtitle">Настрой звук один раз — слушай где угодно</div>
+
+<div class="panel">
+  <select id="trackSelect">
+    <option>Загружаю список треков...</option>
+  </select>
+
+  <div class="row">
+    <button id="playBtn">▶ Играть</button>
+    <button id="bassBtn">🔊 Bass Boost</button>
+    <button id="resetBtn">↺ Сброс</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="graph-wrap">
+    <input type="range" id="volSlider" min="-15" max="15" value="0" step="1">
+    <canvas id="eqCanvas" width="320" height="260"></canvas>
+  </div>
+
+  <div class="hint">Таскай точки на графике пальцем, чтобы менять звук в реальном времени</div>
+</div>
+
+<h3>Мои пресеты</h3>
+<div class="panel">
+  <div id="presetsList"><div class="empty-hint">Пока нет сохранённых пресетов</div></div>
+
+  <div class="row">
+    <input type="text" id="presetNameInput" placeholder="Имя пресета, напр. Трасса">
+    <button id="savePresetBtn" class="small-save">💾 Сохранить текущий</button>
+  </div>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+const BANDS = [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+const MIN_DB = -25;
+const MAX_DB = 25;
+
+let audioCtx = null;
+let sourceNode = null;
+let filters = [];
+let masterGain = null;
+let audioEl = null;
+let isPlaying = false;
+let currentTrackId = null;
+
+const canvas = document.getElementById('eqCanvas');
+const ctx2d = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
+const trackSelect = document.getElementById('trackSelect');
+const playBtn = document.getElementById('playBtn');
+const bassBtn = document.getElementById('bassBtn');
+const resetBtn = document.getElementById('resetBtn');
+const volSlider = document.getElementById('volSlider');
+const presetsListEl = document.getElementById('presetsList');
+const presetNameInput = document.getElementById('presetNameInput');
+const savePresetBtn = document.getElementById('savePresetBtn');
+
+let gains = BANDS.map(() => 0);
+let tracksData = [];
+
+// ---- Треки ----
+async function loadTracks() {
+  try {
+    const res = await fetch('/api/tracks');
+    tracksData = await res.json();
+
+    trackSelect.innerHTML = '';
+    if (tracksData.length === 0) {
+      trackSelect.innerHTML = '<option>Нет треков — пришли файл боту</option>';
+      return;
+    }
+
+    tracksData.forEach((t) => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.displayName;
+      trackSelect.appendChild(opt);
+    });
+
+    selectTrackById(tracksData[0].id);
+  } catch (err) {
+    statusEl.textContent = 'Ошибка загрузки списка треков';
+    console.error(err);
+  }
+}
+
+function selectTrackById(id) {
+  const track = tracksData.find((t) => t.id === Number(id));
+  if (!track) return;
+  currentTrackId = track.id;
+  setupAudioForUrl(track.url);
+}
+
+trackSelect.addEventListener('change', () => {
+  selectTrackById(trackSelect.value);
+});
+
+function setupAudioForUrl(url) {
+  if (audioEl) {
+    audioEl.pause();
+    audioEl.src = '';
+  }
+
+  audioEl = new Audio(url);
+  audioEl.crossOrigin = 'anonymous';
+  audioEl.loop = true;
+  isPlaying = false;
+  playBtn.textContent = '▶ Играть';
+
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  sourceNode = audioCtx.createMediaElementSource(audioEl);
+
+  filters = BANDS.map((freq) => {
+    const f = audioCtx.createBiquadFilter();
+    f.type = 'peaking';
+    f.frequency.value = freq;
+    f.Q.value = 1.0;
+    f.gain.value = 0;
+    return f;
+  });
+
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = dbToGain(parseFloat(volSlider.value));
+
+  let node = sourceNode;
+  filters.forEach((f) => {
+    node.connect(f);
+    node = f;
+  });
+  node.connect(masterGain);
+  masterGain.connect(audioCtx.destination);
+
+  applyGainsToFilters();
+  statusEl.textContent = 'Трек загружен, можно нажать "Играть"';
+}
+
+function dbToGain(db) {
+  return Math.pow(10, db / 20);
+}
+
+playBtn.addEventListener('click', async () => {
+  if (!audioEl) return;
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+  if (isPlaying) {
+    audioEl.pause();
+    playBtn.textContent = '▶ Играть';
+  } else {
+    await audioEl.play();
+    playBtn.textContent = '⏸ Пауза';
+  }
+  isPlaying = !isPlaying;
+});
+
+volSlider.addEventListener('input', () => {
+  if (masterGain) {
+    masterGain.gain.value = dbToGain(parseFloat(volSlider.value));
+  }
+});
+
+bassBtn.addEventListener('click', () => {
+  gains[0] = 10; gains[1] = 8; gains[2] = 5;
+  applyGainsToFilters();
+  drawGraph();
+});
+
+resetBtn.addEventListener('click', () => {
+  gains = BANDS.map(() => 0);
+  volSlider.value = 0;
+  if (masterGain) masterGain.gain.value = 1;
+  applyGainsToFilters();
+  drawGraph();
+});
+
+function applyGainsToFilters() {
+  filters.forEach((f, i) => {
+    f.gain.value = gains[i];
+  });
+}
+
+// ---- Пресеты ----
+async function loadPresets() {
+  try {
+    const res = await fetch('/api/presets');
+    const presetsData = await res.json();
+    renderPresets(presetsData);
+  } catch (err) {
+    console.error('Ошибка загрузки пресетов', err);
+  }
+}
+
+function renderPresets(presetsData) {
+  presetsListEl.innerHTML = '';
+  if (presetsData.length === 0) {
+    presetsListEl.innerHTML = '<div class="empty-hint">Пока нет сохранённых пресетов</div>';
+    return;
+  }
+
+  presetsData.forEach((preset) => {
+    const item = document.createElement('div');
+    item.className = 'preset-item';
+
+    const dot = document.createElement('div');
+    dot.className = 'preset-dot';
+
+    const label = document.createElement('span');
+    label.textContent = preset.name;
+
+    const applyButton = document.createElement('button');
+    applyButton.className = 'apply-btn';
+    applyButton.textContent = 'Применить';
+    applyButton.onclick = () => applyPreset(preset);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'delete-btn';
+    deleteButton.textContent = '✕';
+    deleteButton.onclick = () => deletePreset(preset.id);
+
+    item.appendChild(dot);
+    item.appendChild(label);
+    item.appendChild(applyButton);
+    item.appendChild(deleteButton);
+    presetsListEl.appendChild(item);
+  });
+}
+
+function applyPreset(preset) {
+  gains = [...preset.gains];
+  volSlider.value = preset.volume_db;
+  if (masterGain) masterGain.gain.value = dbToGain(preset.volume_db);
+  applyGainsToFilters();
+  drawGraph();
+  statusEl.textContent = `Применён пресет "${preset.name}"`;
+}
+
+async function deletePreset(id) {
+  await fetch(`/api/presets/${id}`, { method: 'DELETE' });
+  loadPresets();
+}
+
+savePresetBtn.addEventListener('click', async () => {
+  const name = presetNameInput.value.trim();
+  if (!name) {
+    tg.showAlert('Введи имя пресета перед сохранением');
+    return;
+  }
+
+  const volumeDb = parseFloat(volSlider.value);
+
+  await fetch('/api/presets', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, volumeDb, gains }),
+  });
+
+  presetNameInput.value = '';
+  loadPresets();
+  statusEl.textContent = `Пресет "${name}" сохранён`;
+});
+
+// ---- Отрисовка графика ----
+const PAD_LEFT = 30;
+const PAD_RIGHT = 12;
+const PAD_TOP = 10;
+const PAD_BOTTOM = 20;
+
+function freqToX(freq) {
+  const w = canvas.width - PAD_LEFT - PAD_RIGHT;
+  const minLog = Math.log10(BANDS[0]);
+  const maxLog = Math.log10(BANDS[BANDS.length - 1]);
+  const t = (Math.log10(freq) - minLog) / (maxLog - minLog);
+  return PAD_LEFT + t * w;
+}
+
+function dbToY(db) {
+  const h = canvas.height - PAD_TOP - PAD_BOTTOM;
+  const t = (db - MAX_DB) / (MIN_DB - MAX_DB);
+  return PAD_TOP + t * h;
+}
+
+function yToDb(y) {
+  const h = canvas.height - PAD_TOP - PAD_BOTTOM;
+  const t = (y - PAD_TOP) / h;
+  let db = MAX_DB + t * (MIN_DB - MAX_DB);
+  return Math.max(MIN_DB, Math.min(MAX_DB, db));
+}
+
+function drawGraph() {
+  ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx2d.strokeStyle = '#2a3947';
+  ctx2d.lineWidth = 1;
+  ctx2d.fillStyle = '#5c7185';
+  ctx2d.font = '10px sans-serif';
+
+  [25, 10, 0, -10, -25].forEach((db) => {
+    const y = dbToY(db);
+    ctx2d.beginPath();
+    ctx2d.moveTo(PAD_LEFT, y);
+    ctx2d.lineTo(canvas.width - PAD_RIGHT, y);
+    ctx2d.stroke();
+    ctx2d.fillText(db.toString(), 2, y + 3);
+  });
+
+  ctx2d.strokeStyle = '#3d5266';
+  ctx2d.beginPath();
+  ctx2d.moveTo(PAD_LEFT, dbToY(0));
+  ctx2d.lineTo(canvas.width - PAD_RIGHT, dbToY(0));
+  ctx2d.stroke();
+
+  ctx2d.strokeStyle = '#2ea6ff';
+  ctx2d.lineWidth = 2;
+  ctx2d.beginPath();
+  BANDS.forEach((freq, i) => {
+    const x = freqToX(freq);
+    const y = dbToY(gains[i]);
+    if (i === 0) ctx2d.moveTo(x, y);
+    else ctx2d.lineTo(x, y);
+  });
+  ctx2d.stroke();
+
+  BANDS.forEach((freq, i) => {
+    const x = freqToX(freq);
+    const y = dbToY(gains[i]);
+    ctx2d.beginPath();
+    ctx2d.arc(x, y, 7, 0, Math.PI * 2);
+    ctx2d.fillStyle = draggingIndex === i ? '#ff5f5f' : '#ffffff';
+    ctx2d.fill();
+    ctx2d.strokeStyle = '#2ea6ff';
+    ctx2d.lineWidth = 2;
+    ctx2d.stroke();
+  });
+
+  ctx2d.fillStyle = '#5c7185';
+  BANDS.forEach((freq) => {
+    const x = freqToX(freq);
+    const label = freq >= 1000 ? (freq / 1000) + 'k' : freq.toString();
+    ctx2d.fillText(label, x - 10, canvas.height - 4);
+  });
+}
+
+let draggingIndex = null;
+
+function getPointerPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+function findNearestBand(x) {
+  let nearest = 0;
+  let minDist = Infinity;
+  BANDS.forEach((freq, i) => {
+    const bx = freqToX(freq);
+    const dist = Math.abs(bx - x);
+    if (dist < minDist) { minDist = dist; nearest = i; }
+  });
+  return nearest;
+}
+
+function startDrag(e) {
+  const pos = getPointerPos(e);
+  draggingIndex = findNearestBand(pos.x);
+  updateDrag(e);
+}
+
+function updateDrag(e) {
+  if (draggingIndex === null) return;
+  e.preventDefault();
+  const pos = getPointerPos(e);
+  gains[draggingIndex] = Math.round(yToDb(pos.y));
+  applyGainsToFilters();
+  drawGraph();
+}
+
+function endDrag() {
+  draggingIndex = null;
+  drawGraph();
+}
+
+canvas.addEventListener('mousedown', startDrag);
+canvas.addEventListener('mousemove', updateDrag);
+window.addEventListener('mouseup', endDrag);
+
+canvas.addEventListener('touchstart', startDrag, { passive: false });
+canvas.addEventListener('touchmove', updateDrag, { passive: false });
+canvas.addEventListener('touchend', endDrag);
+
+// ---- Звёздное небо на фоне ----
+function generateStarfield() {
+  const container = document.getElementById('starfield');
+  const count = 90;
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    const size = Math.random() * 1.5 + 1;
+    star.style.width = size + 'px';
+    star.style.height = size + 'px';
+    star.style.animationDelay = (Math.random() * 3.5) + 's';
+    star.style.animationDuration = (2.5 + Math.random() * 3) + 's';
+    container.appendChild(star);
+  }
+}
+
+// ---- Старт ----
+generateStarfield();
+drawGraph();
+loadTracks();
+loadPresets();
+</script>
+</body>
+</html>
